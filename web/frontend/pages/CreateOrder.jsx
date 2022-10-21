@@ -1,72 +1,125 @@
-import { ResourcePicker, TitleBar, useAppBridge, useNavigate } from '@shopify/app-bridge-react';
-import { Button, Card, Form, FormLayout, Page, Stack, TextContainer } from '@shopify/polaris';
-import { useCallback, useState } from 'react';
+import { TitleBar, useAppBridge, useNavigate } from '@shopify/app-bridge-react';
+import { Fullscreen } from '@shopify/app-bridge/actions';
+import { Button, Card, Form, FormLayout, Heading, Layout, Modal, Page, PageActions, Stack, TextContainer } from '@shopify/polaris';
+import { useCallback, useRef, useState } from 'react';
 
-import { PassField } from '../components';
-import { useScanner } from '../hooks'
+import { PassField, ScannerPicker } from '../components';
 
 export default function CreateOrder() {
-    const [showResourcePicket, setShowResourcePicket] = useState(false);
+    const [activeModal, setActiveModal] = useState(false);
+    const [isOrderEdit, setIsOrderEdit] = useState(true);
 
+    const app = useAppBridge();
+    const fullscreen = Fullscreen.create(app);
     const navigate = useNavigate();
 
-    const toggleResourcePicker = useCallback(
-      () => {
-        setShowResourcePicket(!showResourcePicket);
-      },
-      [showResourcePicket],
+    const toggleEditOrder = () => {
+        setIsOrderEdit( !isOrderEdit );
+    }
+
+    const handleChange = useCallback(
+        () => setActiveModal(!activeModal), 
+        [activeModal]
     );
 
-    const { barCode, launchScanner } = useScanner();
+    const regresarMenu = useRef();
 
     return (
-        <Page narrowWidth>
-            <TitleBar
-                title="Crear un pedido"
+        <>
+            <Modal
+                activator={regresarMenu}
+                open={activeModal}
+                onClose={handleChange}
+                title="Salir"
                 primaryAction={{
-                    content: "Historial de pedidos",
+                    content: 'Salir',
                     onAction: () => navigate("/"),
                 }}
-            />
-            <Form>
-                <FormLayout>
-                    <Card title="Registro del vendedor">
-                        <Card.Section>
-                            <Stack>
+                secondaryActions={[
+                {
+                    content: 'Cancelar',
+                    onAction: handleChange,
+                },
+                ]}
+            >
+                <Modal.Section>
+                <TextContainer>
+                    <p>
+                    ¿Estas seguro de salir y cancelar el pedido?
+                    </p>
+                </TextContainer>
+                </Modal.Section>
+            </Modal>
+
+            <Page 
+                
+                title="Crear un pedido"
+            >
+                <Form>
+                        <Layout>
+                            <Layout.Section>
+
+                            <Card sectioned>
+                                <Heading>Lista de productos</Heading>
+                                {
+                                    isOrderEdit && <ScannerPicker />
+                                }
+
+                                {
+                                    isOrderEdit && <Button onClick={ toggleEditOrder }>
+                                        Cerrar pedido
+                                    </Button>
+                                }
+
+                                {
+                                    !isOrderEdit && <Button onClick={ toggleEditOrder }>
+                                        Editar pedido
+                                    </Button>
+                                }
+
+                            </Card>
+                            
+
+                            </Layout.Section>
+                            <Layout.Section secondary>
+
+                            <Card sectioned>
+
+                                <Heading>Menu</Heading>
+                                <div ref={regresarMenu}>
+                                    <Button onClick={ handleChange }>
+                                        Cancelar
+                                    </Button>
+                                </div>
+                                
+                            </Card>
+
+                            <Card sectioned>
+                                <Heading>Resumen de la venta</Heading>
                                 <PassField label="Ingresa el NIP" />
-                            </Stack>
-                        </Card.Section>
-                    </Card>
-                    <Card title="Lista de productos">
-                        <Card.Section >
-                            { showResourcePicket && (
-                                <ResourcePicker
-                                    resourceType="Product"
-                                    showVariants={false}
-                                    selectMultiple={true}
-                                    onCancel={ toggleResourcePicker }
-                                    onSelection={ null }
-                                    initialQuery="0002"
-                                    open
-                                />
-                            )}
-                            <Button onClick={ launchScanner }>
-                                Buscar Producto
-                            </Button>
-                            <TextContainer>
-                                <p>Scan: { barCode }</p>
-                            </TextContainer>
-                        </Card.Section>
-                    </Card>
-                    <Card title="Resumen de la venta">
-                        <Card.Section>
-                            <TextContainer>
-                                <h1>Holaaaa Formulario de venta</h1>
-                            </TextContainer>
-                        </Card.Section>
-                    </Card>
-                </FormLayout>
-            </Form>
-        </Page>
+                                <hr />
+                                <TextContainer>
+                                    <Stack distribution='fillEvenly'>
+                                        <Stack.Item>
+                                            <p>Sub total: </p>
+                                            <p>IVA: </p>
+                                            <p>Total:</p>
+                                        </Stack.Item>
+                                        <Stack.Item>
+                                            <p><b>$ 0.00</b></p>
+                                            <p><b>$ 0.00</b></p>
+                                            <p><b>$ 0.00</b></p>
+                                        </Stack.Item>
+                                    </Stack>
+                                    
+                                </TextContainer>
+                            </Card>
+
+                            </Layout.Section>
+                        </Layout>
+                </Form>
+            </Page>
+            
+        </>
     );
 }
