@@ -9,11 +9,13 @@ export const ScannerPicker = () => {
 
     const [showResourcePicker, setShowResourcePicker] = useState(false);
 
+    const rpicker = useRef();
+
     const toggleResourcePicker = useCallback(
         () => {
             setShowResourcePicker(!showResourcePicker);
         },
-        [showResourcePicker],
+        [],
     );
 
     const onChange = useCallback (
@@ -25,21 +27,25 @@ export const ScannerPicker = () => {
     )
 
     useEffect(() => {
-        const handleKeyPress = (event) => {
-            
+        if( showResourcePicker ) {
+
+
+            console.log('cambio sv');
+        } else {
+            console.log('borrar addevent');
         }
 
         return () => {
             
         }
-    }, [searchValue])
+    }, [showResourcePicker])
     
     
 
     return (
         <>
         { showResourcePicker && (
-            
+            <div ref={ rpicker }>
                 <ResourcePicker
                     resourceType="Product"
                     showVariants={false}
@@ -49,6 +55,7 @@ export const ScannerPicker = () => {
                     initialQuery={ searchValue }
                     open
                 />
+            </div>
         )}
         <TextField
             label="Buscar productos"

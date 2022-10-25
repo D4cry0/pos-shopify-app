@@ -9,8 +9,6 @@ export default function CreateOrder() {
     const [activeModal, setActiveModal] = useState(false);
     const [isOrderEdit, setIsOrderEdit] = useState(true);
 
-    const app = useAppBridge();
-    const fullscreen = Fullscreen.create(app);
     const navigate = useNavigate();
 
     const toggleEditOrder = () => {
@@ -55,7 +53,7 @@ export default function CreateOrder() {
                 
                 title="Crear un pedido"
             >
-                <Form>
+                
                         <Layout>
                             <Layout.Section>
 
@@ -97,27 +95,40 @@ export default function CreateOrder() {
                             <Card sectioned>
                                 <Heading>Resumen de la venta</Heading>
                                 <PassField label="Ingresa el NIP" />
-                                <hr />
-                                <TextContainer>
+                               
+                                
                                     <Stack distribution='fillEvenly'>
                                         <Stack.Item>
+                                            
+                                            <TextContainer>
                                             <p>Sub total: </p>
+                                            </TextContainer>
+                                            <TextContainer>
                                             <p>IVA: </p>
+                                            </TextContainer>
+                                            <TextContainer>
                                             <p>Total:</p>
+                                            </TextContainer>
                                         </Stack.Item>
                                         <Stack.Item>
-                                            <p><b>$ 0.00</b></p>
-                                            <p><b>$ 0.00</b></p>
-                                            <p><b>$ 0.00</b></p>
+                                            <TextContainer>
+                                            <p>$ 0.00</p>
+                                            </TextContainer>
+                                            <TextContainer>
+                                            <p>$ 0.00</p>
+                                            </TextContainer>
+                                            <TextContainer>
+                                            <p>$ 0.00</p>
+                                            </TextContainer>
+                                            
                                         </Stack.Item>
                                     </Stack>
                                     
-                                </TextContainer>
+                                
                             </Card>
 
                             </Layout.Section>
                         </Layout>
-                </Form>
             </Page>
             
         </>
