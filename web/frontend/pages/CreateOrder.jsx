@@ -102,22 +102,16 @@ export default function CreateOrder() {
                                             
                                             <TextContainer>
                                             <p>Sub total: </p>
-                                            </TextContainer>
-                                            <TextContainer>
                                             <p>IVA: </p>
-                                            </TextContainer>
-                                            <TextContainer>
                                             <p>Total:</p>
                                             </TextContainer>
+                                            
                                         </Stack.Item>
                                         <Stack.Item>
+
                                             <TextContainer>
                                             <p>$ 0.00</p>
-                                            </TextContainer>
-                                            <TextContainer>
                                             <p>$ 0.00</p>
-                                            </TextContainer>
-                                            <TextContainer>
                                             <p>$ 0.00</p>
                                             </TextContainer>
                                             
