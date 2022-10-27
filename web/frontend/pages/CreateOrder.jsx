@@ -1,41 +1,89 @@
-import { TitleBar, useAppBridge, useNavigate } from '@shopify/app-bridge-react';
+import { TitleBar,
+         useAppBridge,
+         useNavigate } from '@shopify/app-bridge-react';
 import { Fullscreen } from '@shopify/app-bridge/actions';
-import { Button, Card, Form, FormLayout, Heading, Layout, Modal, Page, PageActions, Stack, TextContainer } from '@shopify/polaris';
-import { useCallback, useRef, useState } from 'react';
+import { Button,
+         Card,
+         Form,
+         FormLayout,
+         Heading,
+         Layout,
+         Modal,
+         Page,
+         PageActions,
+         Stack,
+         TextContainer } from '@shopify/polaris';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { PassField, ScannerPicker } from '../components';
+import { PassField, ProductList, ScannerPicker } from '../components';
 
 export default function CreateOrder() {
-    const [activeModal, setActiveModal] = useState(false);
-    const [isOrderEdit, setIsOrderEdit] = useState(true);
+    const [ activeModal, setActiveModal ] = useState( false );
+    const [ isOrderEdit, setIsOrderEdit ] = useState( true );
+
+    const [ products, setProducts ] = useState( [] );
+    const [ orderTotal, setOrderTotal ] = useState( 0 );
 
     const navigate = useNavigate();
+    const returnMainMenu = useRef();
 
-    const toggleEditOrder = () => {
-        setIsOrderEdit( !isOrderEdit );
+    const formatter = new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    });
+
+    const addProducts = ( newProduct ) => {
+        setProducts([ ...products, newProduct ]);
     }
 
+    const updateProducts = ( updatedProductsList ) => {
+        setProducts( updatedProductsList );
+    }
+
+
+    const toggleEditOrder = useCallback(
+        () => {
+            setIsOrderEdit( !isOrderEdit );
+        },
+        [ isOrderEdit ],
+    )
+
     const handleChange = useCallback(
-        () => setActiveModal(!activeModal), 
-        [activeModal]
+        () => setActiveModal( !activeModal ), 
+        [ activeModal ]
     );
 
-    const regresarMenu = useRef();
+    useEffect(() => {
+        let sum = 0;
+
+        products.map( item => {
+            sum += parseFloat(item.qtyToBuy) * parseFloat(item.price);
+        });
+
+        setOrderTotal( sum );
+        
+        return () => {
+            
+        }
+    }, [products])
+    
 
     return (
         <>
             <Modal
-                activator={regresarMenu}
-                open={activeModal}
-                onClose={handleChange}
-                title="Salir"
+                activator={ returnMainMenu }
+                open={ activeModal }
+                onClose={ handleChange }
+                title="Exit"
                 primaryAction={{
-                    content: 'Salir',
-                    onAction: () => navigate("/"),
+                    content: 'Exit',
+                    onAction: () => navigate( "/" ),
                 }}
                 secondaryActions={[
                 {
-                    content: 'Cancelar',
+                    content: 'Cancel',
                     onAction: handleChange,
                 },
                 ]}
@@ -43,7 +91,7 @@ export default function CreateOrder() {
                 <Modal.Section>
                 <TextContainer>
                     <p>
-                    ¿Estas seguro de salir y cancelar el pedido?
+                        Are you sure you want to exit?
                     </p>
                 </TextContainer>
                 </Modal.Section>
@@ -51,27 +99,35 @@ export default function CreateOrder() {
 
             <Page 
                 
-                title="Crear un pedido"
+                title="New Order"
             >
                 
                         <Layout>
                             <Layout.Section>
 
                             <Card sectioned>
-                                <Heading>Lista de productos</Heading>
+                                <Heading>Cart</Heading>
                                 {
-                                    isOrderEdit && <ScannerPicker />
+                                    isOrderEdit && <ScannerPicker addProducts={ addProducts } />
+                                }
+
+                                {
+                                    isOrderEdit && <ProductList 
+                                        products={ products } 
+                                        updateProducts={ updateProducts }
+                                        currencyFormat={ formatter }
+                                    />
                                 }
 
                                 {
                                     isOrderEdit && <Button onClick={ toggleEditOrder }>
-                                        Cerrar pedido
+                                        Checkout
                                     </Button>
                                 }
 
                                 {
                                     !isOrderEdit && <Button onClick={ toggleEditOrder }>
-                                        Editar pedido
+                                        Edit Order
                                     </Button>
                                 }
 
@@ -84,25 +140,25 @@ export default function CreateOrder() {
                             <Card sectioned>
 
                                 <Heading>Menu</Heading>
-                                <div ref={regresarMenu}>
+                                <div ref={ returnMainMenu }>
                                     <Button onClick={ handleChange }>
-                                        Cancelar
+                                        Cancel
                                     </Button>
                                 </div>
                                 
                             </Card>
 
                             <Card sectioned>
-                                <Heading>Resumen de la venta</Heading>
-                                <PassField label="Ingresa el NIP" />
+                                <Heading>Order Summary</Heading>
+                                <PassField label="Enter NIP" />
                                
-                                
+                                    <hr />
                                     <Stack distribution='fillEvenly'>
                                         <Stack.Item>
                                             
                                             <TextContainer>
-                                            <p>Sub total: </p>
-                                            <p>IVA: </p>
+                                            <p>Subtotal:</p>
+                                            <p>VAT:</p>
                                             <p>Total:</p>
                                             </TextContainer>
                                             
@@ -110,9 +166,9 @@ export default function CreateOrder() {
                                         <Stack.Item>
 
                                             <TextContainer>
-                                            <p>$ 0.00</p>
-                                            <p>$ 0.00</p>
-                                            <p>$ 0.00</p>
+                                            <p>{ formatter.format(orderTotal) }</p>
+                                            <p>{ formatter.format((orderTotal*0.16)) }</p>
+                                            <p>{ formatter.format(orderTotal) }</p>
                                             </TextContainer>
                                             
                                         </Stack.Item>
