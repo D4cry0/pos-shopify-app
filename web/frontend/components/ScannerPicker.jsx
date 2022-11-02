@@ -7,7 +7,7 @@ import { useCallback, useState, useEffect } from "react";
 
 import '../styles.css';
 
-export const ScannerPicker = ({ addProducts }) => {
+export const ScannerPicker = ({ addProduct }) => {
     const [searchValue, setSearchValue] = useState( '' );
 
     const [selectedProduct, setSelectedProduct] = useState( null );
@@ -40,7 +40,10 @@ export const ScannerPicker = ({ addProducts }) => {
     const handleProductSelect = ({ selection }) => {
         setSelectedProduct({
             id:             selection[0].id,
-            images:         selection[0].images,
+            image:          {
+                                originalSrc: selection[0].images[0]?.originalSrc || '', 
+                                altText: selection[0].images[0]?.altText || ''
+                            },
             title:          selection[0].title,
             variantId:      selection[0].variants[0].id,
             inventoryItem:  selection[0].variants[0].product.id,
@@ -64,7 +67,7 @@ export const ScannerPicker = ({ addProducts }) => {
             // TODO: Logica para validar la info
 
             if ( searchValue === selectedProduct.sku ){
-                addProducts( selectedProduct );
+                addProduct( selectedProduct );
                 
             } else {
                 setInError( 'Invalid item' );

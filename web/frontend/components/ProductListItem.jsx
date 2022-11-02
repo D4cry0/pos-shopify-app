@@ -1,55 +1,54 @@
-import { Stack,
-         TextField,
+import { Button,
+         ButtonGroup,
+         ResourceItem,
+         Stack,
          TextStyle, 
          Thumbnail} from "@shopify/polaris"
-import { useEffect } from "react";
+import { PlusMinor,
+         MinusMinor,
+         CircleCancelMajor } from '@shopify/polaris-icons';         
 
+export const ProductListItem = ({ field, index, updateProduct, deleteProduct, currencyFormat }) => {
 
+    const { id, image, title, qtyToBuy, price, sku } = field;
 
-export const ProductListItem = ({ product, updateList }) => {
-
-
-    const {id, images, title, qtyToBuy, price, sku} = product;
-
-    const media = images[0] 
-                ? <Thumbnail source={ images[0]?.originalSrc } alt={ images[0]?.altText } /> 
-                : <Thumbnail source="" alt="" />;
-
-    useEffect(() => {
-        console.log("EN el item");
-        return () => {
-        
-        }
-    }, [])
-    
+    const media = image.value 
+            ? <Thumbnail source={ image.value?.originalSrc } alt={ image.value?.altText } size='large'/> 
+            : <Thumbnail source='' alt='' />;
 
     return (
-        <>
-            <Stack alignment="center">
+        <div key={ id.value } style={{ paddingTop: 10, paddingBottom: 10 }}>
+            <Stack distribution="fillEvenly" alignment="center">
                 <Stack.Item>
                     <h3>
-                        <TextStyle variation="strong">{title}</TextStyle>
+                        <TextStyle variation="strong">{ title.value }</TextStyle>
                     </h3>
-                    {media}
-
+                    { media }
                 </Stack.Item>
-                <Stack alignment="center" >
-                    <Stack.Item alignment="center">
+
+                <Stack.Item >               
+                        <p>SKU: { sku.value }</p>
+                        <ButtonGroup segmented>
+                            <Button id={ id.value+'-minus' } size="slim" onClick={ updateProduct } outline>-</Button>
+                            <Button size="slim" outline disabled>{ qtyToBuy.value }</Button>
+                            <Button id={ id.value+'-plus' } size="slim" onClick={ updateProduct } outline>+</Button>
+                        </ButtonGroup>
                         
-                    </Stack.Item>
-                    <div>SKU: {sku}</div>
-                        <TextField 
-                            id={id}
-                            label=""
-                            type="number"
-                            value={qtyToBuy}
-                            onChange={ updateList }
-                            autoComplete="off"
-                        />
-                    <div>${price} MXN</div>
+                        <small>{ currencyFormat.format( price.value ) }</small>
+
+
                     
-                </Stack>
+                </Stack.Item>
+
+                <Stack.Item>
+                    <div> { currencyFormat.format((parseFloat(price.value)*qtyToBuy.value)) } </div>
+                </Stack.Item>
+                    
+                <Stack.Item>
+                    <Button onClick={ () => deleteProduct( index ) } icon={ CircleCancelMajor } plain></Button>
+                </Stack.Item>
             </Stack>
-        </>
-    )
+
+        </div>
+    );
 }
