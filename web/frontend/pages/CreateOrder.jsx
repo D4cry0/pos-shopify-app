@@ -148,38 +148,42 @@ export default function CreateOrder() {
                                         </Stack>
 
                                     </Card.Section>
+                                        
+                                    {
+                                        cartItemCount > 0 && 
+                                        <Card.Section>
+                                            <PassField label="Enter NIP" setNip={ handleNip } />
                                     
-                                    
-                                    <Card.Section>
-                                        <PassField label="Enter NIP" setNip={ handleNip } />
-                                        <div style={{height: 30}}></div>
-                                        <TextContainer>Payment</TextContainer>
-                                        <ButtonGroup>
+                                            <div style={{height: 30}}></div>
                                             
-                                            <Button onClick={ handleCash} icon={CashDollarMajor}>Cash</Button>
-                                            <Button onClick={ handleCredit } icon={CreditCardMajor}>Credit</Button>
-                                            <Button onClick={ handleBoth } icon={TransactionMajor}>Both</Button>
-                                        </ButtonGroup>
-                                        
-                                        <div style={{height: 30}}></div>
-                                        
-                                        <BothPaymentFields  
-                                            isBothPayments={ isBothPayments }
-                                            cash={ cash }
-                                            credit={ credit }
-                                            orderTotal={ totalCartNumber }
-                                        />
-                                    </Card.Section>
+                                            <TextContainer>Payment</TextContainer>
+                                            <ButtonGroup>                                               
+                                                <Button onClick={ handleCash} icon={CashDollarMajor}>Cash</Button>
+                                                <Button onClick={ handleCredit } icon={CreditCardMajor}>Credit</Button>
+                                                <Button onClick={ handleBoth } icon={TransactionMajor}>Both</Button>
+                                            </ButtonGroup>
+                                            
+                                            <div style={{height: 30}}></div>
 
-                                    <Card.Section>
-                                        <Form onSubmit={ submit }>
-                                            {
-                                                isCheckoutOk() &&  <Button submit primary icon={CheckoutMajor}>
+                                            <BothPaymentFields  
+                                                isBothPayments={ isBothPayments }
+                                                cash={ cash }
+                                                credit={ credit }
+                                                orderTotal={ totalCartNumber }
+                                            />
+                                        </Card.Section>
+                                    }
+
+                                    {
+                                        isCheckoutOk() &&
+                                        <Card.Section>
+                                            <Form onSubmit={ submit }>
+                                                <Button submit primary icon={CheckoutMajor}>
                                                     Checkout
                                                 </Button>
-                                            }
-                                        </Form>
-                                    </Card.Section>
+                                            </Form>
+                                        </Card.Section>
+                                    }
                                             
 
                                 </Card>

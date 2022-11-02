@@ -98,19 +98,23 @@ export const useCreateOrder = () => {
     const handleCash = () => {
         cash.onChange( orderTotal.toString() );
         credit.onChange( '0' );
+        setIsBothPayments( false );
     }
 
     const handleCredit = () => {
         cash.onChange( '0' );
         credit.onChange( orderTotal.toString() );
+        setIsBothPayments( false );
     }
 
     const handleBoth = () => {
-        setIsBothPayments( !isBothPayments );
+        cash.onChange( '0' );
+        credit.onChange( '0' );
+        setIsBothPayments( true );
     }
 
     const isCheckoutOk = () => {
-        return dirty && typeof nip.value !== 'object' && orderTotal > 0;
+        return dirty && typeof nip.value !== 'object' && orderTotal > 0 && typeof cash.value !== 'object';
         // return dirty && nip.value;
     }
 
