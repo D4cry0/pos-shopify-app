@@ -1,4 +1,4 @@
-import { TextField } from "@shopify/polaris"
+import { TextField } from '@shopify/polaris'
 
 import { useState, useCallback } from 'react';
 
@@ -25,10 +25,9 @@ export const PassField = ({ label, setNip }) => {
         <>
             <TextField 
                 label={label} 
-                placeholder="****" 
                 value={ mask } 
                 onChange={ handleTextChange } 
-                autoComplete="off"
+                autoComplete='off'
             />
         </>
     );

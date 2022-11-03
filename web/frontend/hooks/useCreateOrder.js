@@ -2,10 +2,7 @@ import { useEffect, useState } from "react";
 
 import { useField,
          useForm,
-         useDynamicList,
-         notEmpty,
-         lengthLessThan,
-         positiveNumericString } from '@shopify/react-form';
+         useDynamicList } from '@shopify/react-form';
 
 export const useCreateOrder = () => {
     
@@ -40,14 +37,6 @@ export const useCreateOrder = () => {
     }
 
     const cartList = useDynamicList( [], productFieldsFactory );
-    
-    const itemCount = useField({
-        value: 0
-    });
-
-    const orderAmount = useField({
-        value: 0
-    });
 
     const nip = useField({
         value: 0
@@ -83,38 +72,36 @@ export const useCreateOrder = () => {
     });
 
     
-    const [ isBothPayments, setIsBothPayments ] = useState( false );
     const [ updating, setUpdating ] = useState( false );
     const [ orderTotal, setOrderTotal ] = useState( 0 );
     const [ cartItemCount, setCartItemCount ] = useState( 0 );
     
-    const formatter = new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-    });
+    const setCashValue = ( numberValue ) => {
+        cash.onChange( numberValue.toString() );
+    }
+
     
-    const handleCash = () => {
+    const onCash = () => {
         cash.onChange( orderTotal.toString() );
         credit.onChange( '0' );
-        setIsBothPayments( false );
+    }
+    
+    const setCreditValue = ( numberValue ) => {
+        credit.onChange( numberValue.toString() );
     }
 
-    const handleCredit = () => {
+    const onCredit = () => {
         cash.onChange( '0' );
         credit.onChange( orderTotal.toString() );
-        setIsBothPayments( false );
     }
 
-    const handleBoth = () => {
-        cash.onChange( '0' );
-        credit.onChange( '0' );
-        setIsBothPayments( true );
+    const onBoth = () => {
+        cash.onChange( (orderTotal-1).toString() );
+        credit.onChange( '1' );
     }
 
     const isCheckoutOk = () => {
-        return dirty && typeof nip.value !== 'object' && orderTotal > 0 && typeof cash.value !== 'object';
+        return dirty && typeof nip.value !== 'object' && orderTotal > 0 && typeof cash.value !== 'object' && typeof credit.value !== 'object';
         // return dirty && nip.value;
     }
 
@@ -126,31 +113,35 @@ export const useCreateOrder = () => {
     const updateProduct = ( event ) => {
 
         // usar currentTarget siempre
-        const [ id, op ] = event.currentTarget.id.split( "-" );
+        const [ index, op ] = event.currentTarget.id.split( "-" );
 
-        cartList.fields.some( item => {
-            
-            if( item.id.value === id ){
-                const sum = item.qtyToBuy.value + ( op === 'plus' ? 1 : -1 );
-                // TODO: Verificar el Inventario de la locacion
-                item.qtyToBuy.onChange( 
-                    ( sum >= item.inventoryQty.value ) 
-                    ? item.inventoryQty.value
-                    : ( sum <= 0 ? 1 : sum ) 
-                );
+        const item = cartList.fields[index];
 
-                return true;
-            }
+        const sum = item.qtyToBuy.value + ( op === 'plus' ? 1 : -1 );
 
-            // esto para retornarlo sin cambios
-            return false;
-        });
+        item.qtyToBuy.onChange( 
+            ( sum >= item.inventoryQty.value ) 
+            ? item.inventoryQty.value
+            : ( sum <= 0 ? 1 : sum ) 
+        );
         
+        cash.onChange( {} );
+        credit.onChange( {} );
         setUpdating( true );
     }
 
     const deleteProduct = ( index ) => {
         cartList.removeItem(index);
+        cash.onChange( {} );
+        credit.onChange( {} );
+        setUpdating( true );
+    }
+
+    const resetForm = () => {
+        cartList.reset();
+        cash.onChange( {} );
+        credit.onChange( {} );
+        nip.onChange( {} );
         setUpdating( true );
     }
 
@@ -177,22 +168,23 @@ export const useCreateOrder = () => {
     // total = subtotal + vatValue
     // TODO: Acomodar el formatter para que quede global
     return {
-        cash,
-        credit,
-        cartList,
+        cashVal: typeof cash.value === 'object' ? '0' : cash.value,
+        creditVal: typeof credit.value === 'object' ? '0' : credit.value,
+        setCashValue,
+        onCash,
+        setCreditValue,
+        onCredit,
+        onBoth,
+        cartList: cartList.fields,
+        showCartList: cartList.dirty, 
         cartItemCount,
-        formatter,
-        subTotalCart: formatter.format(orderTotal),
-        vatCart: formatter.format((orderTotal*0.16)),
-        totalCart: formatter.format(orderTotal),
-        totalCartNumber: orderTotal,
+        subTotalCart: orderTotal,
+        vatCart: orderTotal*0.16,
+        totalCart: orderTotal,
         addProduct,
         updateProduct,
         deleteProduct,
-        handleCash,
-        handleCredit,
-        handleBoth,
-        isBothPayments,
+        resetForm,
         handleNip: nip.onChange,
         submit,
         submitting,

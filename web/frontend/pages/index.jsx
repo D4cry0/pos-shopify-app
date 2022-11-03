@@ -7,7 +7,7 @@ import {
   FullscreenBar,
   DisplayText,
 } from '@shopify/polaris';
-import { useNavigate, TitleBar, useAppBridge } from '@shopify/app-bridge-react';
+import { useNavigate, useAppBridge } from '@shopify/app-bridge-react';
 import { Fullscreen } from '@shopify/app-bridge/actions';
 
 import { posImg } from '../assets';
@@ -45,33 +45,33 @@ export default function HomePage() {
           }}
         >
           <div style={{ marginLeft: '1rem', flexGrow: 1 }}>
-            <DisplayText size="small"> vsys POS - punto de venta </DisplayText>
+            <DisplayText size="small"> vsys POS - point of sale </DisplayText>
           </div>
         </div>
       </FullscreenBar> }
       <Page 
           narrowWidth
-          title="Bienvenido"
+          title="Welcome"
           primaryAction={{
-            content: "Pantalla completa",
+            content: "Fullscreen",
             onAction: () => goFullscreen(),
             disabled: ( isFullscreen )
           }}
       >
         <Card sectioned>
           <EmptyState
-            heading="POS - Punto de Venta"
+            heading="POS"
             action={{
-              content: 'Crear un pedido',
+              content: 'New Order',
               onAction: () => navigate("/CreateOrder"),
             }}
             secondaryAction={{
-              content: 'Ver ventas',
+              content: 'Sales',
               onAction: () => navigate("/"),
             }}
             image={ posImg }
           >
-            <p>Ten a la mano tu NIP para usar el sistema.</p>
+            <p>NIP is required</p>
           </EmptyState>
         </Card>
       </Page>

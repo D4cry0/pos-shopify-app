@@ -79,10 +79,6 @@ export const ScannerPicker = ({ addProduct }) => {
             toggleResourcePicker( false );
         }
 
-        return () => {
-            // console.log('desmondado');
-            // document.removeEventListener('keydown', handleKeyDownPicker);
-        }
     }, [ selectedProduct ]);
 
     useEffect(() => {
@@ -97,26 +93,26 @@ export const ScannerPicker = ({ addProduct }) => {
 
     return (
         <>
-        <ResourcePicker
-            resourceType="Product"
-            showVariants={false}
-            selectMultiple={false}
-            onCancel={ toggleResourcePicker }
-            onSelection={ handleProductSelect }
-            initialQuery={ searchValue }
-            open={ showResourcePicker }
-        />
-        <div onKeyDown={ handleKeyDown }>
-            <TextField
-                label="Search Items"
-                value={ searchValue }
-                onChange={ handleSearchChange }
-                placeholder="Search by SKU ..."
-                helpText="Barcode Scanner"
-                autoComplete="off"
+            <ResourcePicker
+                resourceType="Product"
+                showVariants={false}
+                selectMultiple={false}
+                onCancel={ toggleResourcePicker }
+                onSelection={ handleProductSelect }
+                initialQuery={ searchValue }
+                open={ showResourcePicker }
             />
-        </div>
-        { showInError && <InlineError message={ msgInError } />}
+            <div onKeyDown={ handleKeyDown }>
+                <TextField
+                    label="Search Items"
+                    value={ searchValue }
+                    onChange={ handleSearchChange }
+                    placeholder="Search by SKU ..."
+                    helpText="Barcode Scanner"
+                    autoComplete="off"
+                />
+            </div>
+            { showInError && <InlineError message={ msgInError } />}
         </>
     );
 }

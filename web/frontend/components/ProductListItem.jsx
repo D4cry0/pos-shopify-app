@@ -1,16 +1,20 @@
 import { Button,
          ButtonGroup,
-         ResourceItem,
          Stack,
          TextStyle, 
          Thumbnail} from "@shopify/polaris"
-import { PlusMinor,
-         MinusMinor,
-         CircleCancelMajor } from '@shopify/polaris-icons';         
+import { CircleCancelMajor } from '@shopify/polaris-icons';         
 
-export const ProductListItem = ({ field, index, updateProduct, deleteProduct, currencyFormat }) => {
+export const ProductListItem = ({ field, index, updateProduct, deleteProduct }) => {
 
     const { id, image, title, qtyToBuy, price, sku } = field;
+
+    const currencyFormat = new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    });
 
     const media = image.value 
             ? <Thumbnail source={ image.value?.originalSrc } alt={ image.value?.altText } size='large'/> 
@@ -29,9 +33,9 @@ export const ProductListItem = ({ field, index, updateProduct, deleteProduct, cu
                 <Stack.Item >               
                         <p>SKU: { sku.value }</p>
                         <ButtonGroup segmented>
-                            <Button id={ id.value+'-minus' } size="slim" onClick={ updateProduct } outline>-</Button>
+                            <Button id={ index+'-minus' } size="slim" onClick={ updateProduct } outline>-</Button>
                             <Button size="slim" outline disabled>{ qtyToBuy.value }</Button>
-                            <Button id={ id.value+'-plus' } size="slim" onClick={ updateProduct } outline>+</Button>
+                            <Button id={ index+'-plus' } size="slim" onClick={ updateProduct } outline>+</Button>
                         </ButtonGroup>
                         
                         <small>{ currencyFormat.format( price.value ) }</small>
@@ -41,7 +45,7 @@ export const ProductListItem = ({ field, index, updateProduct, deleteProduct, cu
                 </Stack.Item>
 
                 <Stack.Item>
-                    <div> { currencyFormat.format((parseFloat(price.value)*qtyToBuy.value)) } </div>
+                    <div> { currencyFormat.format(( parseFloat( price.value )*qtyToBuy.value )) } </div>
                 </Stack.Item>
                     
                 <Stack.Item>

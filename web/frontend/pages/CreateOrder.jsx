@@ -1,22 +1,20 @@
-import { ContextualSaveBar, useNavigate } from '@shopify/app-bridge-react';
+import { useNavigate } from '@shopify/app-bridge-react';
 import { Button,
          ButtonGroup,
          Card,
          Form,
-         FormLayout,
          Layout,
          Modal,
          Page,
-         Spinner,
          Stack,
-         TextContainer, 
-         TextField} from '@shopify/polaris';
+         TextContainer,
+         TextField, } from '@shopify/polaris';
 import { CheckoutMajor,
          CashDollarMajor,
          CreditCardMajor,
          TransactionMajor } from '@shopify/polaris-icons';
 
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { BothPaymentFields, PassField, ProductList, ScannerPicker } from '../components';
 
@@ -27,22 +25,23 @@ import '../styles.css';
 export default function CreateOrder() {
 
     const { 
-            cash,
-            credit,
+            cashVal,
+            creditVal,
+            setCashValue,
+            onCash,
+            setCreditValue,
+            onCredit,
+            onBoth,
             cartList,
+            showCartList,
             cartItemCount,
-            formatter,
             subTotalCart,
             vatCart,
             totalCart,
-            totalCartNumber,
             addProduct,
             updateProduct,
             deleteProduct,
-            handleCash,
-            handleCredit,
-            handleBoth,
-            isBothPayments,
+            resetForm,
             handleNip,
             isCheckoutOk,
             submit,
@@ -50,14 +49,45 @@ export default function CreateOrder() {
             reset, } = useCreateOrder();
 
     const [ activeModal, setActiveModal ] = useState( false );
+    const [ isCash, setIsCash ] = useState( false );
+    const [ isCredit, setIsCredit ] = useState( false );
+    const [ isBoth, setIsBoth ] = useState( false );
 
     const navigate = useNavigate();
     const returnMainMenu = useRef();
+
+    const currencyFormat = new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    });
 
     const handleChange = useCallback(
         () => setActiveModal( !activeModal ), 
         [ activeModal ]
     );
+
+    const handleCash = () => {
+        onCash();
+    }
+
+    const handleCredit = () => {
+        onCredit();
+    }
+
+    const handleBoth = () => {
+        onBoth();
+    }
+
+    useEffect(() => {
+
+        setIsCash( cashVal == subTotalCart && subTotalCart > 0 );
+        setIsCredit( creditVal ==  subTotalCart && subTotalCart > 0 );
+        setIsBoth( creditVal > 0 && cashVal > 0 );
+
+    }, [cashVal, creditVal]);
+    
 
     return (
         <>
@@ -87,111 +117,147 @@ export default function CreateOrder() {
             </Modal>
 
             <Page 
-                
                 title="New Order"
             >
+                <Layout>
 
-                        <Layout>
+                    <Layout.Section>
+                        <Card sectioned title="Cart">
+                            <Card.Section>
+                                <ScannerPicker addProduct={ addProduct } />
+                            </Card.Section>
 
-                            <Layout.Section>
+                            <Card.Section>
+                                {
+                                    showCartList && <ProductList 
+                                        cartList={ cartList } 
+                                        updateProduct={ updateProduct }
+                                        deleteProduct={ deleteProduct }
+                                        cartItemCount={ cartItemCount }
+                                    />
+                                }
+                            </Card.Section>
+                        </Card>
+                    </Layout.Section>
 
-                                <Card sectioned title="Cart">
-                                    <Card.Section>
-                                        <ScannerPicker addProduct={ addProduct } />
-                                    </Card.Section>
+                    <Layout.Section secondary>
+                        <Card sectioned title="Order Menu">
+                            <Stack>
+                                {
+                                    showCartList && <Button 
+                                        onClick={ resetForm } 
+                                        primary
+                                    >
+                                        Clear
+                                    </Button>
+                                }
+                                <div ref={ returnMainMenu }>
+                                    <Button onClick={ handleChange }>
+                                        Cancel
+                                    </Button>
+                                </div>
+                            </Stack>
+                        </Card>
 
-                                    <Card.Section>
-                                        <ProductList 
-                                            cartList={ cartList } 
-                                            updateProduct={ updateProduct }
-                                            deleteProduct={ deleteProduct }
-                                            currencyFormat={ formatter }
-                                            cartItemCount={ cartItemCount }
-                                        />
-                                    </Card.Section>
-                                </Card>
-                            
+                        <Card sectioned title="Customer">
+                            <TextField
+                                label='Email'
+                                type='email'
+                                autoComplete='off'  
+                            />
+                        </Card>
 
-                            </Layout.Section>
-                            <Layout.Section secondary>
+                        <Card sectioned title="Order Summary">
+                            <Card.Section>
+                                <Stack distribution='fillEvenly'>
+                                    <Stack.Item>
+                                        
+                                        <TextContainer>
+                                        <p>Subtotal:</p>
+                                        <p>VAT:</p>
+                                        <p>Total:</p>
+                                        </TextContainer>
+                                        
+                                    </Stack.Item>
+                                    <Stack.Item>
+
+                                        <TextContainer>
+                                            <p>{ currencyFormat.format( subTotalCart ) }</p>
+                                            <p>{ currencyFormat.format( vatCart ) }</p>
+                                            <p>{ currencyFormat.format( totalCart ) }</p>
+                                        </TextContainer>
+                                        
+                                    </Stack.Item>
+                                </Stack>
+
+                            </Card.Section>
                                 
-                                <Card sectioned title="Menu">
-                                    <div ref={ returnMainMenu }>
-                                        <Button onClick={ handleChange }>
-                                            Cancel
-                                        </Button>
+                            {
+                                cartItemCount > 0 && 
+                                <Card.Section>
+                                    <PassField label="Enter NIP" setNip={ handleNip } />
+                            
+                                    <div style={{height: 30}}></div>
+                                    
+                                    <TextContainer>Payment</TextContainer>
+                                    <div style={{color: 'rgba(16, 50, 98, 1)'}}> 
+                                        <ButtonGroup>                                        
+                                            <Button 
+                                                onClick={ handleCash } 
+                                                icon={CashDollarMajor}
+                                                monochrome={ isCash }
+                                                outline={ isCash }
+                                            >
+                                                Cash&nbsp;
+                                            </Button>
+                                            <Button 
+                                                onClick={ handleCredit } 
+                                                icon={CreditCardMajor}
+                                                monochrome={ isCredit }
+                                                outline={ isCredit }
+                                            >
+                                                Credit
+                                            </Button>
+                                            <Button 
+                                                onClick={ handleBoth } 
+                                                icon={TransactionMajor}
+                                                monochrome={ isBoth }
+                                                outline={ isBoth }
+                                            >
+                                                Both&nbsp;&nbsp;
+                                            </Button>
+                                        </ButtonGroup>
                                     </div>
                                     
-                                </Card>
-
-                                <Card sectioned title="Order Summary">
-                                    <Card.Section>
-                                        <Stack distribution='fillEvenly'>
-                                            <Stack.Item>
-                                                
-                                                <TextContainer>
-                                                <p>Subtotal:</p>
-                                                <p>VAT:</p>
-                                                <p>Total:</p>
-                                                </TextContainer>
-                                                
-                                            </Stack.Item>
-                                            <Stack.Item>
-
-                                                <TextContainer>
-                                                    <p>{ subTotalCart }</p>
-                                                    <p>{ vatCart }</p>
-                                                    <p>{ totalCart }</p>
-                                                </TextContainer>
-                                                
-                                            </Stack.Item>
-                                        </Stack>
-
-                                    </Card.Section>
-                                        
-                                    {
-                                        cartItemCount > 0 && 
-                                        <Card.Section>
-                                            <PassField label="Enter NIP" setNip={ handleNip } />
-                                    
-                                            <div style={{height: 30}}></div>
-                                            
-                                            <TextContainer>Payment</TextContainer>
-                                            <ButtonGroup>                                               
-                                                <Button onClick={ handleCash} icon={CashDollarMajor}>Cash</Button>
-                                                <Button onClick={ handleCredit } icon={CreditCardMajor}>Credit</Button>
-                                                <Button onClick={ handleBoth } icon={TransactionMajor}>Both</Button>
-                                            </ButtonGroup>
-                                            
-                                            <div style={{height: 30}}></div>
-
-                                            <BothPaymentFields  
-                                                isBothPayments={ isBothPayments }
-                                                cash={ cash }
-                                                credit={ credit }
-                                                orderTotal={ totalCartNumber }
-                                            />
-                                        </Card.Section>
-                                    }
+                                    <div style={{height: 30}}></div>
 
                                     {
-                                        isCheckoutOk() &&
-                                        <Card.Section>
-                                            <Form onSubmit={ submit }>
-                                                <Button submit primary icon={CheckoutMajor}>
-                                                    Checkout
-                                                </Button>
-                                            </Form>
-                                        </Card.Section>
+                                        isBoth && <BothPaymentFields  
+                                            cash={ cashVal }
+                                            credit={ creditVal }
+                                            setCashValue={ setCashValue }
+                                            setCreditValue={ setCreditValue }
+                                            orderTotal={ subTotalCart }
+                                        />
                                     }
-                                            
+                                </Card.Section>
+                            }
 
-                                </Card>
+                            {
+                                isCheckoutOk() &&
+                                <Card.Section>
+                                    <Form onSubmit={ submit }>
+                                        <Button submit primary icon={CheckoutMajor}>
+                                            Checkout
+                                        </Button>
+                                    </Form>
+                                </Card.Section>
+                            }
+                        </Card>
+                    </Layout.Section>
 
-                            </Layout.Section>
-                        </Layout>
+                </Layout>
             </Page>
-            
         </>
     );
 }

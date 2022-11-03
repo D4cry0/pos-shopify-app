@@ -1,36 +1,28 @@
-import { TextField } from "@shopify/polaris"
-import { useEffect, useState } from "react"
+import { TextField } from '@shopify/polaris'
+
+import { useEffect, useState } from 'react'
 
 
-export const BothPaymentFields = ({ isBothPayments, cash, credit, orderTotal }) => {
-
-    const [ cashField, setCashField ] = useState( typeof cash.value === 'object'? 0 : cash.value );
-    const [ creditField, setCreditField ] = useState( typeof credit.value === 'object'? 0 : credit.value );
+export const BothPaymentFields = ({ cash, setCashValue, credit, setCreditValue, orderTotal }) => {
 
     const handleCashChange = ( value ) => {
 
         const valueFloat = parseFloat(value);
 
         if( valueFloat > orderTotal ){
-            setCashField( orderTotal );
-            cash.onChange( orderTotal.toString() );
-            setCreditField( '0' );
-            credit.onChange( '0' );
+            setCashValue( orderTotal - 1 );
+            setCreditValue( '1' );
             return;
         }
 
         if( valueFloat < 0 || !value || !valueFloat ){
-            setCashField( '0' );
-            cash.onChange( '0' );
-            setCreditField( orderTotal);
-            credit.onChange( orderTotal.toString() );
+            setCashValue( '1' );
+            setCreditValue( orderTotal-1 );
             return;
         }
 
-        setCashField( valueFloat );
-        cash.onChange( value );
-        setCreditField( orderTotal - valueFloat );
-        credit.onChange( (orderTotal - valueFloat).toString() );
+        setCashValue( valueFloat );
+        setCreditValue( (orderTotal - valueFloat).toString() );
     }
 
     const handleCreditChange = ( value ) => {
@@ -38,55 +30,41 @@ export const BothPaymentFields = ({ isBothPayments, cash, credit, orderTotal }) 
         const valueFloat = parseFloat(value);
 
         if( valueFloat > orderTotal ){
-            setCreditField( orderTotal );
-            credit.onChange( orderTotal.toString() );
-            setCashField( '0' );
-            cash.onChange( '0' );
+            setCreditValue( orderTotal-1 );
+            setCashValue( '1' );
             return;
         }
 
         if( valueFloat < 0 || !value || !valueFloat ){
-            setCreditField( '0' );
-            credit.onChange( '0' );
-            setCashField( orderTotal );
-            cash.onChange( orderTotal.toString() );
+            setCreditValue( '1' );
+            setCashValue( orderTotal-1 );
             return;
         }
 
-        setCreditField( valueFloat );
-        credit.onChange( value );
-        setCashField( orderTotal - valueFloat );
-        cash.onChange( (orderTotal - valueFloat).toString() );
+        setCreditValue( valueFloat );
+        setCashValue( orderTotal - valueFloat );
     }
 
-    useEffect(() => {
-        setCashField( typeof cash.value === 'object'? 0 : cash.value );
-        setCreditField( typeof credit.value === 'object'? 0 : credit.value );
-    }, [isBothPayments]);
+    // useEffect(() => {
+    //     setCashField( cash );
+    //     setCreditField( credit );
+    // }, [isBothPayments]);
     
 
     return (
         <>
-            {
-                isBothPayments && <TextField 
-                    disabled={ !isBothPayments }
-                    label="Cash"
-                    value={ cashField }
-                    onChange={ handleCashChange }
-                    placeholder="Cash"
-                    autoComplete="off"
-                />
-            }
-
-            {
-                isBothPayments && <TextField 
-                    label="Credit"
-                    value={ creditField }
-                    onChange={ handleCreditChange }
-                    placeholder="Credit"
-                    autoComplete="off"
-                />
-            }  
+            <TextField 
+                label='Cash'
+                value={ cash }
+                onChange={ handleCashChange }
+                autoComplete='off'
+            />
+            <TextField 
+                label='Credit'
+                value={ credit }
+                onChange={ handleCreditChange }
+                autoComplete='off'
+            /> 
         </>
     )
 }
