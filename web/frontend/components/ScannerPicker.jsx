@@ -3,7 +3,7 @@ import { InlineError,
          TextField,
         } from "@shopify/polaris";
 
-import { useCallback, useState, useEffect } from "react";
+import { useCallback, useState, useEffect, useRef } from "react";
 
 import '../styles.css';
 
@@ -16,9 +16,15 @@ export const ScannerPicker = ({ addProduct }) => {
     const [showInError, setShowInError] = useState( false );
     const [msgInError, setInError] = useState( '' );
 
-    const toggleResourcePicker = useCallback(
-        () => {
-            setShowResourcePicker( !showResourcePicker );
+    const textFieldRef = useRef();
+
+    const handleShowResourcePicker = useCallback(
+        ( value ) => {
+            setShowResourcePicker( value );
+            if( !value ) {
+                setSearchValue( '' );
+                textFieldRef.current.focus();
+            }
         },
         [ showResourcePicker ],
     );
@@ -30,11 +36,23 @@ export const ScannerPicker = ({ addProduct }) => {
         [ showInError ],
     )
     
-
+    let keyTimer;
     const handleKeyDown = ( event ) => {
-        if ( event.keyCode === 13 ) {
-            toggleResourcePicker( true );  
+        
+        if( searchValue.length > 1 ){
+            keyTimer = setTimeout(() => {
+                handleShowResourcePicker( true );
+            }, 400 );
         }
+
+        if ( event.keyCode === 13 ) {
+            handleShowResourcePicker( true );
+            clearTimeout( keyTimer );
+        }
+    }
+
+    const handleFocus = ( event ) => {
+        event.currentTarget.select();
     }
 
     const handleProductSelect = ({ selection }) => {
@@ -55,8 +73,6 @@ export const ScannerPicker = ({ addProduct }) => {
         
     };
     
-
-    // TODO: Implementar el bloqueo para el teclado manual
     const handleSearchChange = (value) => {
         setSearchValue(value);
     };
@@ -66,7 +82,7 @@ export const ScannerPicker = ({ addProduct }) => {
         if( selectedProduct ){
             // TODO: Logica para validar la info
 
-            if ( searchValue === selectedProduct.sku ){
+            if ( searchValue.toUpperCase().normalize() === selectedProduct.sku.normalize() ){
                 addProduct( selectedProduct );
                 
             } else {
@@ -76,7 +92,8 @@ export const ScannerPicker = ({ addProduct }) => {
             
             setSelectedProduct( null );
             setSearchValue( '' );
-            toggleResourcePicker( false );
+            
+            handleShowResourcePicker( false );
         }
 
     }, [ selectedProduct ]);
@@ -91,18 +108,24 @@ export const ScannerPicker = ({ addProduct }) => {
         }
     }, [ showInError ]);
 
+    useEffect(() => {
+
+        clearTimeout( keyTimer );
+    
+    }, [showResourcePicker]);
+    
     return (
         <>
             <ResourcePicker
                 resourceType="Product"
                 showVariants={false}
                 selectMultiple={false}
-                onCancel={ toggleResourcePicker }
+                onCancel={ () => handleShowResourcePicker( false ) }
                 onSelection={ handleProductSelect }
                 initialQuery={ searchValue }
                 open={ showResourcePicker }
             />
-            <div onKeyDown={ handleKeyDown }>
+            <div ref={ textFieldRef } onKeyDown={ handleKeyDown }>
                 <TextField
                     label="Search Items"
                     value={ searchValue }
@@ -110,6 +133,8 @@ export const ScannerPicker = ({ addProduct }) => {
                     placeholder="Search by SKU ..."
                     helpText="Barcode Scanner"
                     autoComplete="off"
+                    onFocus={ handleFocus }
+                    focused='true'
                 />
             </div>
             { showInError && <InlineError message={ msgInError } />}
