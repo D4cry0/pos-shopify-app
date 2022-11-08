@@ -22,11 +22,12 @@ export const ProductListItem = ({ field, index, updateProduct, deleteProduct }) 
 
     return (
         <div key={ id.value } style={{ paddingTop: 10, paddingBottom: 10 }}>
+            
+            <TextStyle variation="strong">{ title.value }</TextStyle>
+                    
             <Stack distribution="fillEvenly" alignment="center">
                 <Stack.Item>
-                    <h3>
-                        <TextStyle variation="strong">{ title.value }</TextStyle>
-                    </h3>
+                    
                     { media }
                 </Stack.Item>
 

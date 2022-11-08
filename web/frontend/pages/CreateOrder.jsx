@@ -1,10 +1,8 @@
-import { useNavigate } from '@shopify/app-bridge-react';
 import { Button,
          ButtonGroup,
          Card,
          Form,
          Layout,
-         Modal,
          Page,
          Stack,
          TextContainer,
@@ -14,10 +12,9 @@ import { CheckoutMajor,
          CreditCardMajor,
          TransactionMajor } from '@shopify/polaris-icons';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 
-import { BothPaymentFields, ProductList, ScannerPicker } from '../components';
-import { NIPField } from '../components/NIPField';
+import { BothPaymentFields, ProductList, ScannerPicker, PINField } from '../components';
 
 import { useCreateOrder } from '../hooks';
 
@@ -43,15 +40,16 @@ export default function CreateOrder() {
             updateProduct,
             deleteProduct,
             resetForm,
-            handleNip,
-            handleNipError,
-            nipError,
+            handleStaffPin,
+            handleStaffPinError,
+            staffPinError,
             handleCustomerEmail,
             handleCustomerEmailError,
             customerEmail,
             isCheckoutOk,
             submit,
             submitting,
+            submitErrors,
             reset, } = useCreateOrder();
 
     
@@ -166,10 +164,10 @@ export default function CreateOrder() {
                         {
                             cartItemCount > 0 && 
                             <Card.Section>
-                                <NIPField 
-                                    onChange={ handleNip }
-                                    onError={ handleNipError }
-                                    error={ nipError }
+                                <PINField 
+                                    onChange={ handleStaffPin }
+                                    onError={ handleStaffPinError }
+                                    error={ staffPinError }
                                 />
                         
                                 <div style={{height: 30}}></div>
@@ -225,6 +223,9 @@ export default function CreateOrder() {
                                     <Button submit primary icon={CheckoutMajor}>
                                         Checkout
                                     </Button>
+                                    {
+                                        submitErrors.length > 0 && <InlineError message={ submitErrors } />
+                                    }
                                 </Form>
                             </Card.Section>
                         }

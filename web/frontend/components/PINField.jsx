@@ -2,10 +2,10 @@ import { TextField } from '@shopify/polaris'
 
 import { useState, useCallback } from 'react';
 
-export const NIPField = ({ onChange, onError, error }) => {
+export const PINField = ({ onChange, onError, error }) => {
 
     let buff = '';
-    const [mask, setMask] = useState('');
+    const [ mask, setMask ] = useState( '' );
 
     const handleTextChange = useCallback(
       (newValue) => {
@@ -35,7 +35,7 @@ export const NIPField = ({ onChange, onError, error }) => {
     return (
         <>
             <TextField 
-                label='NIP'
+                label='Staff PIN'
                 value={ mask } 
                 onChange={ handleTextChange } 
                 error= { error } 

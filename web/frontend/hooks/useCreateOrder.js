@@ -1,11 +1,16 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { useField,
          useForm,
          useDynamicList } from '@shopify/react-form';
 
+import { useAuthenticatedFetch } from "./useAuthenticatedFetch";
+
 export const useCreateOrder = () => {
     
+    // You always need to use the authenticated fetch
+    const fetch = useAuthenticatedFetch();
+
     const productFieldsFactory = ({
         id,
         image,
@@ -38,6 +43,7 @@ export const useCreateOrder = () => {
 
     const cartList = useDynamicList( [], productFieldsFactory );
 
+    // TODO: Encrypt email and pin
     const customerEmail = useField({
         value: '',
         validates: ( value ) => {
@@ -46,7 +52,7 @@ export const useCreateOrder = () => {
         }
     });
 
-    const nip = useField({
+    const pin = useField({
         value: ''
     });
 
@@ -58,15 +64,54 @@ export const useCreateOrder = () => {
         value: ''
     });
 
+    const handleCreateNewOrder = useCallback(
+        ( fieldValues ) => {
+            (
+                async() => {
+                    console.log( fieldValues );
+
+                    // Use this partial JSON only for query purposes
+                    const lineItems = fieldValues.cartList.map( item => {
+                        return {
+                            variantId: item.variantId,
+                            quantity: item.qtyToBuy,
+                        };
+                    });
+
+                    const data = {
+                        pin: fieldValues.pin,
+                        cash: fieldValues.cash,
+                        credit: fieldValues.credit,
+                        customerEmail: fieldValues.customerEmail,
+                        lineItems: lineItems,
+                    }
+                    // Use this partial JSON only for query purposes
+
+                    const response = await fetch( '/api/posorder/create', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify( data )
+                    });
+
+                    if( !response.ok ) return { status: 'fail', errors: [{ message: 'bad data TODO' }] };
+                    
+                }
+            )();
+            return { status: 'success' };
+        },
+        []
+    );
+
     const { submit,
             submitting,
             dirty,
             reset,
             submitErrors,
-            makeClean 
     } = useForm({
         fields: {
-            nip,
+            pin,
             cash,
             credit,
             customerEmail,
@@ -74,19 +119,15 @@ export const useCreateOrder = () => {
         dynamicLists: {
             cartList
         },
-        onSubmit: async (fieldValues) => {
-            console.log(fieldValues);
-            return { status: 'success' };
-        },
+        onSubmit: handleCreateNewOrder,
     });
-    
     
     const [ updating, setUpdating ] = useState( false );
     const [ orderTotal, setOrderTotal ] = useState( 0 );
     const [ cartItemCount, setCartItemCount ] = useState( 0 );
     
     const isCheckoutOk = () => {
-        return dirty && typeof nip.value !== 'object' && nip.value.length == 6 && orderTotal > 0 && typeof cash.value !== 'object' && typeof credit.value !== 'object';
+        return dirty && typeof pin.value !== 'object' && pin.value.length == 6 && orderTotal > 0 && typeof cash.value !== 'object' && typeof credit.value !== 'object';
     }
 
     const setCashValue = ( numberValue ) => {
@@ -121,7 +162,7 @@ export const useCreateOrder = () => {
     
     const updateProduct = ( event ) => {
         
-        // usar currentTarget siempre
+        // Always use currentTarget
         const [ index, op ] = event.currentTarget.id.split( "-" );
         
         const item = cartList.fields[index];
@@ -194,14 +235,15 @@ export const useCreateOrder = () => {
         updateProduct,
         deleteProduct,
         resetForm,
-        handleNip: nip.onChange,
-        handleNipError: nip.setError,
-        nipError: nip.error,
+        handleStaffPin: pin.onChange,
+        handleStaffPinError: pin.setError,
+        staffPinError: pin.error,
         handleCustomerEmail: customerEmail.onChange,
         handleCustomerEmailError: customerEmail.error,
         customerEmail: typeof customerEmail.value === 'object' ? '' : customerEmail.value,
         submit,
         submitting,
+        submitErrors,
         isCheckoutOk,
         reset,
     }

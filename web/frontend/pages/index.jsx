@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import {
   Page,
@@ -71,7 +71,7 @@ export default function HomePage() {
             }}
             image={ posImg }
           >
-            <p>NIP is required</p>
+            <p>Staff PIN is required</p>
           </EmptyState>
         </Card>
       </Page>

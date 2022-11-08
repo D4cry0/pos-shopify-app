@@ -5,11 +5,14 @@ import express from "express";
 import cookieParser from "cookie-parser";
 import { Shopify, LATEST_API_VERSION } from "@shopify/shopify-api";
 
+import { response, request } from 'express';
+
+
 import applyAuthMiddleware from "./middleware/auth.js";
 import verifyRequest from "./middleware/verify-request.js";
 import { setupGDPRWebHooks } from "./gdpr.js";
-import productCreator from "./helpers/product-creator.js";
 import redirectToAuth from "./helpers/redirect-to-auth.js";
+import createDraftOrder from "./helpers/create-new-order.js";
 import { BillingInterval } from "./helpers/ensure-billing.js";
 import { AppInstallations } from "./app_installations.js";
 
@@ -108,39 +111,6 @@ export async function createServer(
     })
   );
 
-  app.get("/api/products/count", async (req, res) => {
-    const session = await Shopify.Utils.loadCurrentSession(
-      req,
-      res,
-      app.get("use-online-tokens")
-    );
-    const { Product } = await import(
-      `@shopify/shopify-api/dist/rest-resources/${Shopify.Context.API_VERSION}/index.js`
-    );
-
-    const countData = await Product.count({ session });
-    res.status(200).send(countData);
-  });
-
-  app.get("/api/products/create", async (req, res) => {
-    const session = await Shopify.Utils.loadCurrentSession(
-      req,
-      res,
-      app.get("use-online-tokens")
-    );
-    let status = 200;
-    let error = null;
-
-    try {
-      await productCreator(session);
-    } catch (e) {
-      console.log(`Failed to process products/create: ${e.message}`);
-      status = 500;
-      error = e.message;
-    }
-    res.status(status).send({ success: status === 200, error });
-  });
-
   // All endpoints after this point will have access to a request.body
   // attribute, as a result of the express.json() middleware
   app.use(express.json());
@@ -170,6 +140,25 @@ export async function createServer(
     app.use(compression());
     app.use(serveStatic(PROD_INDEX_PATH, { index: false }));
   }
+
+  app.post("/api/posorder/create", async (req = request, res) => {
+    const session = await Shopify.Utils.loadCurrentSession(
+      req,
+      res,
+      false
+    );
+    let status = 200;
+    let error = null;
+
+    try {
+      await createDraftOrder(session, req.body);
+    } catch (e) {
+      console.log(`Failed to create order: ${e.message}`);
+      status = 500;
+      error = e.message;
+    }
+    res.status(status).send({ success: status === 200, error });
+  });
 
   app.use("/*", async (req, res, next) => {
     if (typeof req.query.shop !== "string") {
