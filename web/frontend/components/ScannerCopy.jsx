@@ -49,19 +49,7 @@ export const ScannerPicker = ({ addProduct }) => {
             handleShowResourcePicker( true );
             clearTimeout( keyTimer );
         }
-        
-        if ( event.keyCode === 17 ){
-            keyTimer = setTimeout(() => {
-                handleSearchChange( '' );
-            }, 200 );
-        }
     }
-
-    const handlePaste = ( event ) => {
-        event.preventDefault();
-        handleSearchChange( '' );
-        event.currentTarget.value='';
-    } 
 
     const handleFocus = ( event ) => {
         event.currentTarget.select();
@@ -136,9 +124,8 @@ export const ScannerPicker = ({ addProduct }) => {
                 onSelection={ handleProductSelect }
                 initialQuery={ searchValue }
                 open={ showResourcePicker }
-                showArchived={false}
             />
-            <div ref={ textFieldRef } onKeyDown={ handleKeyDown } onPaste={ handlePaste } onDrop={ handlePaste }>
+            <div ref={ textFieldRef } onKeyDown={ handleKeyDown }>
                 <TextField
                     label="Search Items"
                     value={ searchValue }
