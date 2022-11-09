@@ -2,6 +2,7 @@ import { ResourcePicker } from "@shopify/app-bridge-react";
 import { InlineError,
          TextField,
         } from "@shopify/polaris";
+import e from "express";
 
 import { useCallback, useState, useEffect, useRef } from "react";
 
@@ -48,6 +49,18 @@ export const ScannerPicker = ({ addProduct }) => {
         if ( event.keyCode === 13 ) {
             handleShowResourcePicker( true );
             clearTimeout( keyTimer );
+        }
+        
+        if ( event.keyCode === 17 ){
+            keyTimer = setTimeout(() => {
+                handleSearchChange( '' );
+            }, 200 );
+        }
+    }
+
+    const handleClick = ( event ) => {
+        if( event.button > 0){
+            event.preventDefault();
         }
     }
 
@@ -124,8 +137,9 @@ export const ScannerPicker = ({ addProduct }) => {
                 onSelection={ handleProductSelect }
                 initialQuery={ searchValue }
                 open={ showResourcePicker }
+                showArchived={false}
             />
-            <div ref={ textFieldRef } onKeyDown={ handleKeyDown }>
+            <div ref={ textFieldRef } onKeyDown={ handleKeyDown } onClick={ handleClick }>
                 <TextField
                     label="Search Items"
                     value={ searchValue }

@@ -64,51 +64,55 @@ export const useCreateOrder = () => {
         value: ''
     });
 
-    const handleCreateNewOrder = useCallback(
-        ( fieldValues ) => {
-            (
-                async() => {
-                    console.log( fieldValues );
+    const handleCreateNewOrder = async(fieldValues) => {
+        console.log( fieldValues );
 
-                    // Use this partial JSON only for query purposes
-                    const lineItems = fieldValues.cartList.map( item => {
-                        return {
-                            variantId: item.variantId,
-                            quantity: item.qtyToBuy,
-                        };
-                    });
+        // Use this partial JSON only for query purposes
+        const lineItems = fieldValues.cartList.map( item => {
+            return {
+                variantId: item.variantId,
+                quantity: item.qtyToBuy,
+            };
+        });
 
-                    const data = {
-                        pin: fieldValues.pin,
-                        cash: fieldValues.cash,
-                        credit: fieldValues.credit,
-                        customerEmail: fieldValues.customerEmail,
-                        lineItems: lineItems,
-                    }
-                    // Use this partial JSON only for query purposes
+        const data = {
+            pin: fieldValues.pin,
+            cash: fieldValues.cash,
+            credit: fieldValues.credit,
+            customerEmail: fieldValues.customerEmail,
+            lineItems: lineItems,
+        }
+        // Use this partial JSON only for query purposes
 
-                    const response = await fetch( '/api/posorder/create', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify( data )
-                    });
+        const response = await fetch( '/api/posorder/create', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify( data )
+        });
 
-                    if( !response.ok ) return { status: 'fail', errors: [{ message: 'bad data TODO' }] };
-                    
-                }
-            )();
-            return { status: 'success' };
-        },
-        []
-    );
+        
+
+        if( !response.ok ){
+
+            const error = await response.json();
+            return { 
+                status: 'fail', 
+                errors: [{ message: `Failed in: ${ JSON.parse(error.error).line }, contact support` }] 
+            };                    
+        } 
+        
+        setOnSubmitSuccess( true );
+        return { status: 'success' };
+    }
 
     const { submit,
             submitting,
             dirty,
             reset,
             submitErrors,
+            makeClean
     } = useForm({
         fields: {
             pin,
@@ -125,7 +129,8 @@ export const useCreateOrder = () => {
     const [ updating, setUpdating ] = useState( false );
     const [ orderTotal, setOrderTotal ] = useState( 0 );
     const [ cartItemCount, setCartItemCount ] = useState( 0 );
-    
+    const [ onSubmitSuccess, setOnSubmitSuccess ] = useState( false );
+
     const isCheckoutOk = () => {
         return dirty && typeof pin.value !== 'object' && pin.value.length == 6 && orderTotal > 0 && typeof cash.value !== 'object' && typeof credit.value !== 'object';
     }
@@ -212,7 +217,12 @@ export const useCreateOrder = () => {
         
     }, [updating]);
     
+    useEffect(() => {
+        
+        makeClean();
+        setUpdating( true );
 
+    }, [ onSubmitSuccess ]);
     
     // TODO: Implementar cuando el VAT no esta incluido
     // total = subtotal + vatValue
@@ -245,7 +255,6 @@ export const useCreateOrder = () => {
         submitting,
         submitErrors,
         isCheckoutOk,
-        reset,
     }
 
 }

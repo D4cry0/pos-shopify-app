@@ -14,7 +14,9 @@
   "dependencies": {
     "@shopify/app": "^3.19.0",
     "@shopify/cli": "^3.19.0",
-    "@shopify/react-form": "^2.4.0"
+    "@shopify/react-form": "^2.4.0",
+    "dotenv": "^16.0.3",
+    "mongoose": "^6.7.2"
   },
   "author": "d4cry0"
 }

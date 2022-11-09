@@ -8,7 +8,7 @@ export const ProductList = ({ cartList, updateProduct, deleteProduct, cartItemCo
         
         <>
             {
-                cartList.map(( field, index ) => (
+                cartList.map( ( field, index ) => (
                     <ProductListItem 
                         field={ field }
                         index={ index }

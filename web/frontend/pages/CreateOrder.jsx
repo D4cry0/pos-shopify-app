@@ -2,8 +2,10 @@ import { Button,
          ButtonGroup,
          Card,
          Form,
+         InlineError,
          Layout,
          Page,
+         Spinner,
          Stack,
          TextContainer,
          TextField, } from '@shopify/polaris';
@@ -49,8 +51,7 @@ export default function CreateOrder() {
             isCheckoutOk,
             submit,
             submitting,
-            submitErrors,
-            reset, } = useCreateOrder();
+            submitErrors, } = useCreateOrder();
 
     
     const [ isCash, setIsCash ] = useState( false );
@@ -84,8 +85,8 @@ export default function CreateOrder() {
 
     }, [cashVal, creditVal]);
     
-
     return (
+
         <Page 
             title="New Order"
         >
@@ -202,7 +203,7 @@ export default function CreateOrder() {
                                     </ButtonGroup>
                                 </div>
                                 
-                                <div style={{height: 30}}></div>
+                                <div style={{height: 20}}></div>
 
                                 {
                                     isBoth && <BothPaymentFields  
@@ -220,11 +221,18 @@ export default function CreateOrder() {
                             isCheckoutOk() &&
                             <Card.Section>
                                 <Form onSubmit={ submit }>
-                                    <Button submit primary icon={CheckoutMajor}>
-                                        Checkout
-                                    </Button>
                                     {
-                                        submitErrors.length > 0 && <InlineError message={ submitErrors } />
+                                        ! submitting 
+                                        ?   <Button submit primary icon={CheckoutMajor}>
+                                                Checkout
+                                            </Button> 
+                                        :   <Spinner accessibilityLabel="Spinner Submit" size="large" />
+                                    }
+                                    <div style={{height: 20}}></div>
+                                    {
+                                        submitErrors.length > 0 && submitErrors.map( ( error, index ) => (
+                                            <InlineError key={ index } message={ error.message } />
+                                        ))
                                     }
                                 </Form>
                             </Card.Section>
