@@ -185,11 +185,6 @@ export const useCreateOrder = () => {
         Product exists with different discount
         
         */
-
-        // TODO: Arreglar bugs en la bandera del error
-
-        console.log('Producto', newProduct );
-
         const response = await fetch( '/api/inventory/location', {
             method: 'POST',
             headers: {
@@ -202,34 +197,40 @@ export const useCreateOrder = () => {
         });
 
         const data = await response.json();
-        const foundProduct = cartList.fields.find( item => item.sku.value === newProduct.sku )
+
+        // Check inventory qty vs all the same items in cart
+        let foundProduct = null;
+        let countItem = 0;
+        cartList.fields.forEach( item => {
+            if( item.sku.value === newProduct.sku ){
+                countItem += item.qtyToBuy.value;
+                if( item.amountDiscount.value == newProduct.amountDiscount ){
+                    foundProduct = item;
+                }
+            }
+        });
+
+        console.log('found...',foundProduct);
+        console.log('new...',newProduct);
+        console.log('count...',countItem);
         
-        
-        // No undefined
-        if( foundProduct && newProduct.amountDiscount == foundProduct.amountDiscount.value ) {
+        if( response.ok ){
+            console.log('datainv...', data.inventoryLevel);
             
-            if( response.ok ){
+            if( data.inventoryLevel < countItem+1 ) return true;
+            
+            // No undefined
+            if( foundProduct && newProduct.amountDiscount == foundProduct.amountDiscount.value ) {
                 foundProduct.inventoryQty.onChange( data.inventoryLevel );
                 
-                if( data.inventoryLevel < foundProduct.qtyToBuy.value+1 ) return true;
-                
+                foundProduct.qtyToBuy.onChange( foundProduct.qtyToBuy.value+1 );
+    
             } else {
-                return data.error;
+                cartList.addItem(newProduct);
             }
 
-            // Insufficient inventory error
-            console.log(foundProduct.inventoryQty.value);
-            console.log(foundProduct.qtyToBuy.value+1);
-            
-            
-            if( foundProduct.inventoryQty.value < foundProduct.qtyToBuy.value+1 ) return true;
-
-            foundProduct.qtyToBuy.onChange( foundProduct.qtyToBuy.value+1 );
-
-        } else {
-
-            cartList.addItem(newProduct);
-
+        } else {   
+            return data.error;
         }
 
         cash.reset();
@@ -258,7 +259,7 @@ export const useCreateOrder = () => {
         cartList.fields.forEach( item => {
             
             itemSum += item.qtyToBuy.value;
-            amount += parseFloat(item.qtyToBuy.value) * parseFloat(item.price.value);
+            amount += parseFloat(item.qtyToBuy.value) * ( parseFloat(item.price.value) - item.amountDiscount.value );
             
         });
 
@@ -274,6 +275,7 @@ export const useCreateOrder = () => {
     useEffect(() => {
         
         makeClean();
+        // TODO: dudar de este updating
         setUpdating( true );
 
     }, [ onSubmitSuccess ]);

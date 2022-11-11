@@ -58,6 +58,8 @@ export const ScannerPicker = ({ addProduct, disabled }) => {
                     && setDiscountAmount( 
                         (parseFloat( buff[1].slice(3) ) / 100).toFixed(2)
                     );
+            } else {
+                setDiscountAmount( 0 );
             }
             clearTimeout( keyTimer );
             handleShowResourcePicker( true );
@@ -98,23 +100,22 @@ export const ScannerPicker = ({ addProduct, disabled }) => {
             amountDiscount: discountAmount * parseFloat(selection[0].variants[0].price),
             inventoryItemId: selection[0].variants[0].inventoryItem.id,
         });
-        
     };
     
     const handleSearchChange = (value) => {
         setSearchValue(value);
     };
 
-    useEffect(() => {
+    useEffect(async () => {
 
         if( selectedProduct ){
             // TODO: Logica para validar la info
 
             if ( searchValue.toUpperCase().normalize() === selectedProduct.sku.normalize() ){
-                const err = addProduct( selectedProduct );
+                const err = await addProduct( selectedProduct );
                 
                 if( err ) {
-                    setInError( 'Insufficient inventory' );
+                    setInError( err?.length > 2 ? err : 'Insufficient inventory' );
                     toggleInError( true );
                 }
 

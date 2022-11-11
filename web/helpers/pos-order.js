@@ -45,8 +45,15 @@ const createOrder = async ( session, orderData ) => {
 
     const calculatedLineItems = lineItems.map( item => {
         return {
+            appliedDiscount: 
+            item.amountDiscount > 0 
+                ? {
+                    value: item.amountDiscount,
+                    valueType: 'FIXED_AMOUNT',
+                  } 
+                : null,
             variantId: item.variantId,
-            quantity: item.quantity
+            quantity: item.quantity,
         };
     });
 

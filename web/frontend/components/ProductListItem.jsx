@@ -7,7 +7,7 @@ import { CircleCancelMajor } from '@shopify/polaris-icons';
 
 export const ProductListItem = ({ field, index, deleteProduct }) => {
 
-    const { image, title, qtyToBuy, price, sku } = field;
+    const { image, title, qtyToBuy, price, sku, amountDiscount } = field;
 
     const currencyFormat = new Intl.NumberFormat('en-US', {
         style: 'currency',
@@ -41,8 +41,15 @@ export const ProductListItem = ({ field, index, deleteProduct }) => {
 
                 </Stack.Item>
 
-                <Stack.Item>
-                    <div> { currencyFormat.format(( parseFloat( price.value )*qtyToBuy.value )) } </div>
+                <Stack.Item alignment='vertical'>
+                    {
+                        amountDiscount.value != 0 && <Stack.Item>
+                            <p> { currencyFormat.format(( ( parseFloat( price.value ) - amountDiscount.value ) *qtyToBuy.value )) } </p>
+                        </Stack.Item>
+                    }
+                    <Stack.Item>
+                        <p style={{ textDecoration: amountDiscount.value == 0 ? null : 'line-through' }}> { currencyFormat.format(( parseFloat( price.value )*qtyToBuy.value )) } </p>
+                    </Stack.Item>
                 </Stack.Item>
                     
                 <Stack.Item>
