@@ -2,20 +2,32 @@ import pkg from 'mongoose';
 const { Schema, model } = pkg;
 
 const StaffSchema = Schema({
-    nombre: {
+    name: {
         type: String,
         require: [true, 'Name is required']
     },
-    pin: {
+    uid: {
         type: String,
-        require: [true, 'PIN is required'],
+        require: [true, 'UID is required'],
         unique: true
+    },
+    shopDomain: {
+        type: String,
+        require: [true, 'Shop Domain is required'],
+    },
+    fulFillLocationId: {
+        type: String,
+        require: [true, 'Fulfill Location ID is required'],
+    },
+    fulFillLocationName: {
+        type: String,
+        require: [true, 'Fulfill Location Name is required'],
     },
 });
 
 StaffSchema.methods.toJSON = function() {
-    const { __v, _id, pin, ...staff } = this.toObject();
-    staff.uid = _id;
+    const { __v, _id, uid, ...staff } = this.toObject();
+    staff.dbId = _id;
     return staff;
 }
 

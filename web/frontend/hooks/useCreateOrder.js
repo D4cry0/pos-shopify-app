@@ -1,58 +1,64 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from 'react';
 
 import { useField,
          useForm,
          useDynamicList } from '@shopify/react-form';
 
-import { useAuthenticatedFetch } from "./useAuthenticatedFetch";
+import { useAuthenticatedFetch } from './useAuthenticatedFetch';
+
+const REGEX_EMAIL = /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/g
 
 export const useCreateOrder = () => {
     
-    // You always need to use the authenticated fetch
+    // Is needed to use the authenticated fetch
     const fetch = useAuthenticatedFetch();
 
     const productFieldsFactory = ({
-        id,
         image,
         title,
         variantId,
-        inventoryItem,
         inventoryQty,
         qtyToBuy,
         price,
         sku,
+        amountDiscount,
+        inventoryItemId,
     }) => {
 
         return [
             {
-                id: id || '',
                 image: image || {
                     originalSrc: '',
                     altText: '',
                 },
                 title: title || '',
                 variantId: variantId || '',
-                inventoryItem: inventoryItem || '',
                 inventoryQty: inventoryQty || 0,
                 qtyToBuy: qtyToBuy || 1,
                 price: price || '',
                 sku: sku || '',
+                amountDiscount: amountDiscount || 0,
+                inventoryItemId: inventoryItemId || '',
             }
         ]
     }
 
     const cartList = useDynamicList( [], productFieldsFactory );
 
-    // TODO: Encrypt email and pin
+    // TODO: Encrypt email
     const customerEmail = useField({
         value: '',
         validates: ( value ) => {
-            if( value.length > 0 && !value.match(/(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/g) )
+            if( value.length > 0 && !value.match(REGEX_EMAIL) )
                 return 'Invalid email address';
         }
     });
 
-    const pin = useField({
+    const uid = useField({
+        value: ''
+    });
+
+    const staff = useField({
         value: ''
     });
 
@@ -64,6 +70,14 @@ export const useCreateOrder = () => {
         value: ''
     });
 
+    const fulFillLocationId = useField({
+        value: ''
+    });
+
+    const fulFillLocationName = useField({
+        value: ''
+    });
+
     const handleCreateNewOrder = async(fieldValues) => {
         console.log( fieldValues );
 
@@ -72,11 +86,12 @@ export const useCreateOrder = () => {
             return {
                 variantId: item.variantId,
                 quantity: item.qtyToBuy,
+                amountDiscount: item.amountDiscount,
             };
         });
 
         const data = {
-            pin: fieldValues.pin,
+            staff: fieldValues.staff,
             cash: fieldValues.cash,
             credit: fieldValues.credit,
             customerEmail: fieldValues.customerEmail,
@@ -99,7 +114,7 @@ export const useCreateOrder = () => {
             const error = await response.json();
             return { 
                 status: 'fail', 
-                errors: [{ message: `Failed in: ${ JSON.parse(error.error).line }, contact support` }] 
+                errors: [{ message: `Failed in: ${ JSON.parse(error.error).line }, contact admin` }] 
             };                    
         } 
         
@@ -115,10 +130,13 @@ export const useCreateOrder = () => {
             makeClean
     } = useForm({
         fields: {
-            pin,
             cash,
             credit,
             customerEmail,
+            uid,
+            staff,
+            fulFillLocationId,
+            fulFillLocationName,
         },
         dynamicLists: {
             cartList
@@ -132,7 +150,7 @@ export const useCreateOrder = () => {
     const [ onSubmitSuccess, setOnSubmitSuccess ] = useState( false );
 
     const isCheckoutOk = () => {
-        return dirty && typeof pin.value !== 'object' && pin.value.length == 6 && orderTotal > 0 && typeof cash.value !== 'object' && typeof credit.value !== 'object';
+        return dirty && typeof uid.value !== 'object' && uid.value.length == 6 && orderTotal > 0 && typeof cash.value !== 'object' && typeof credit.value !== 'object';
     }
 
     const setCashValue = ( numberValue ) => {
@@ -158,31 +176,67 @@ export const useCreateOrder = () => {
         credit.onChange( '1' );
     }
     
-    const addProduct = ( newProduct ) => {
-        cartList.addItem(newProduct);
+    const addProduct = async ( newProduct ) => {
+
+        /* 
+
+        Product doesnt exists in list
+        Product exists in list with same discount (even 0 discount)
+        Product exists with different discount
+        
+        */
+
+        // TODO: Arreglar bugs en la bandera del error
+
+        console.log('Producto', newProduct );
+
+        const response = await fetch( '/api/inventory/location', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                inventoryItemId: newProduct.inventoryItemId,
+                fulFillLocationId: fulFillLocationId.value,
+            }),
+        });
+
+        const data = await response.json();
+        const foundProduct = cartList.fields.find( item => item.sku.value === newProduct.sku )
+        
+        
+        // No undefined
+        if( foundProduct && newProduct.amountDiscount == foundProduct.amountDiscount.value ) {
+            
+            if( response.ok ){
+                foundProduct.inventoryQty.onChange( data.inventoryLevel );
+                
+                if( data.inventoryLevel < foundProduct.qtyToBuy.value+1 ) return true;
+                
+            } else {
+                return data.error;
+            }
+
+            // Insufficient inventory error
+            console.log(foundProduct.inventoryQty.value);
+            console.log(foundProduct.qtyToBuy.value+1);
+            
+            
+            if( foundProduct.inventoryQty.value < foundProduct.qtyToBuy.value+1 ) return true;
+
+            foundProduct.qtyToBuy.onChange( foundProduct.qtyToBuy.value+1 );
+
+        } else {
+
+            cartList.addItem(newProduct);
+
+        }
+
         cash.reset();
         credit.reset();
         setUpdating( true );
-    }
-    
-    const updateProduct = ( event ) => {
-        
-        // Always use currentTarget
-        const [ index, op ] = event.currentTarget.id.split( "-" );
-        
-        const item = cartList.fields[index];
-        
-        const sum = item.qtyToBuy.value + ( op === 'plus' ? 1 : -1 );
-        
-        item.qtyToBuy.onChange( 
-            ( sum >= item.inventoryQty.value ) 
-            ? item.inventoryQty.value
-            : ( sum <= 0 ? 1 : sum ) 
-            );
-            
-            cash.onChange( {} );
-            credit.onChange( {} );
-            setUpdating( true );
+        // No error
+        return false;
     }
     
     const deleteProduct = ( index ) => {
@@ -215,7 +269,7 @@ export const useCreateOrder = () => {
         
         setUpdating( false );
         
-    }, [updating]);
+    }, [ updating ]);
     
     useEffect(() => {
         
@@ -223,11 +277,44 @@ export const useCreateOrder = () => {
         setUpdating( true );
 
     }, [ onSubmitSuccess ]);
+
+    useEffect( async() => {
+
+        if( uid.value.length > 5 ){
+            const response = await fetch( '/api/staff/location', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    uid: uid.value,
+                })
+            });
+
+            const data = await response.json();
+            if ( response.ok ){
+                staff.onChange( data.name );
+                fulFillLocationId.onChange( data.fulFillLocationId );
+                fulFillLocationName.onChange( data.fulFillLocationName );
+                uid.setError( '' );
+            } else {
+                reset();
+                uid.setError( data.error );
+            }
+                
+        }
+        
+    }, [ uid ])
+    
     
     // TODO: Implementar cuando el VAT no esta incluido
     // total = subtotal + vatValue
     // TODO: Acomodar el formatter para que quede global
     return {
+        retailLocation: typeof fulFillLocationName.value === 'object' 
+                                ? ''
+                                : fulFillLocationName.value,
+
         cashVal: typeof cash.value === 'object' ? '0' : cash.value,
         creditVal: typeof credit.value === 'object' ? '0' : credit.value,
         setCashValue,
@@ -242,12 +329,12 @@ export const useCreateOrder = () => {
         vatCart: orderTotal*0.16,
         totalCart: orderTotal,
         addProduct,
-        updateProduct,
         deleteProduct,
         resetForm,
-        handleStaffPin: pin.onChange,
-        handleStaffPinError: pin.setError,
-        staffPinError: pin.error,
+        staffUid: typeof uid.value === 'object' ? '' : uid.value,
+        handleStaffUid: uid.onChange,
+        handleStaffUidError: uid.setError,
+        staffUidError: uid.error,
         handleCustomerEmail: customerEmail.onChange,
         handleCustomerEmailError: customerEmail.error,
         customerEmail: typeof customerEmail.value === 'object' ? '' : customerEmail.value,

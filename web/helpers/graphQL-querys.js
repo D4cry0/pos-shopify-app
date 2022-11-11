@@ -1,4 +1,4 @@
-const CREATE_DRAFT_ORDER_QUERY = ( pin, cash, credit, customerEmail, lineItems, location ) => {
+const CREATE_DRAFT_ORDER_QUERY = ( staff, cash, credit, customerEmail, lineItems, location ) => {
     /* 
         // RETURN DATA
         body{
@@ -37,8 +37,8 @@ const CREATE_DRAFT_ORDER_QUERY = ( pin, cash, credit, customerEmail, lineItems, 
                             value: credit
                         },
                         {
-                            key: 'pin',
-                            value: pin
+                            key: 'staff',
+                            value: staff
                         },
                     ],
                     note: `Punto de venta: ${ location }`,
@@ -243,6 +243,38 @@ const FULFILL_ORDER_QUERY = ( fulFillmentID ) => {
     }
 }
 
+const GET_INVENTORY_QTY_BY_LOCATION = ( inventoryItemId, fulFillLocationId ) => {
+
+    /* 
+    
+        // RETURN DATA
+        {
+        "body": {
+                "data": {
+                    "inventoryItem": {
+                        "inventoryLevel": {
+                            "available": 3
+                        }
+                    }
+                },
+            },
+        }
+    
+    
+    */
+
+    return {
+        data: `
+            query {
+                inventoryItem(id: "${ inventoryItemId }") {
+                    inventoryLevel(locationId: "${ fulFillLocationId }"){
+                        available
+                    }
+                }
+            }`,
+    }
+}
+
 export {
     CREATE_DRAFT_ORDER_QUERY,
     CREATE_ORDER_QUERY,
@@ -250,5 +282,5 @@ export {
     SET_FULFILLORDER_IN_LOCATIONID_QUERY,
     FULFILL_ORDER_QUERY,
 
-
+    GET_INVENTORY_QTY_BY_LOCATION,
 }

@@ -15,6 +15,7 @@
     "@shopify/app": "^3.19.0",
     "@shopify/cli": "^3.19.0",
     "@shopify/react-form": "^2.4.0",
+    "bcrypt": "^5.1.0",
     "dotenv": "^16.0.3",
     "mongoose": "^6.7.2"
   },

@@ -1,27 +1,5 @@
-.input-count {
-    height: 28px;
-    width: 50px;
-    padding: --p-space-0;
-    border: var(--p-border-width-1) solid var(--p-border-neutral-subdued);
-    border-top-color: var(--p-border-subdued);
-    border-bottom-color: var(--p-border-shadow-subdued);
-    text-align: center;
-}
-
-.input-count:focus {
-    outline: none;
-}
 
 .cart-totalitems {
     display: flex;
     justify-content: flex-end;
-}
-
-.qty-item {
-    padding: --p-space-5;
-    
-}
-
-.div-osum-pad {
-    padding: --p-space-20;
 }

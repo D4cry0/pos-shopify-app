@@ -1,8 +1,8 @@
-import { TextContainer } from "@shopify/polaris"
+import { TextContainer } from '@shopify/polaris';
 
-import { ProductListItem } from "./";
+import { ProductListItem } from './';
 
-export const ProductList = ({ cartList, updateProduct, deleteProduct, cartItemCount }) => {
+export const ProductList = ({ cartList, deleteProduct, cartItemCount }) => {
 
     return (
         
@@ -12,14 +12,13 @@ export const ProductList = ({ cartList, updateProduct, deleteProduct, cartItemCo
                     <ProductListItem 
                         field={ field }
                         index={ index }
-                        updateProduct={ updateProduct }
                         deleteProduct={ deleteProduct }
                     />
                 ))
             }
             <TextContainer>
-                <div className="cart-totalitems">
-                    <p>Total { cartItemCount > 1 ? "items" : "item" }: { cartItemCount }</p>
+                <div className='cart-totalitems'>
+                    <p>Total { cartItemCount > 1 ? 'items' : 'item' }: { cartItemCount }</p>
                 </div>
             </TextContainer>
         </>

@@ -2,12 +2,12 @@ import { Button,
          ButtonGroup,
          Stack,
          TextStyle, 
-         Thumbnail} from "@shopify/polaris"
+         Thumbnail} from '@shopify/polaris'
 import { CircleCancelMajor } from '@shopify/polaris-icons';         
 
-export const ProductListItem = ({ field, index, updateProduct, deleteProduct }) => {
+export const ProductListItem = ({ field, index, deleteProduct }) => {
 
-    const { id, image, title, qtyToBuy, price, sku } = field;
+    const { image, title, qtyToBuy, price, sku } = field;
 
     const currencyFormat = new Intl.NumberFormat('en-US', {
         style: 'currency',
@@ -21,11 +21,11 @@ export const ProductListItem = ({ field, index, updateProduct, deleteProduct }) 
             : <Thumbnail source='' alt='' />;
 
     return (
-        <div key={ id.value } style={{ paddingTop: 10, paddingBottom: 10 }}>
+        <div key={ sku.value } style={{ paddingTop: 10, paddingBottom: 10 }}>
             
-            <TextStyle variation="strong">{ title.value }</TextStyle>
+            <TextStyle variation='strong'>{ title.value }</TextStyle>
                     
-            <Stack distribution="fillEvenly" alignment="center">
+            <Stack distribution='fillEvenly' alignment='center'>
                 <Stack.Item>
                     
                     { media }
@@ -34,15 +34,11 @@ export const ProductListItem = ({ field, index, updateProduct, deleteProduct }) 
                 <Stack.Item >               
                         <p>SKU: { sku.value }</p>
                         <ButtonGroup segmented>
-                            <Button id={ index+'-minus' } size="slim" onClick={ updateProduct } outline>-</Button>
-                            <Button size="slim" outline disabled>{ qtyToBuy.value }</Button>
-                            <Button id={ index+'-plus' } size="slim" onClick={ updateProduct } outline>+</Button>
+                            <Button size='slim' outline disabled>{ qtyToBuy.value }</Button>
                         </ButtonGroup>
                         
                         <small>{ currencyFormat.format( price.value ) }</small>
 
-
-                    
                 </Stack.Item>
 
                 <Stack.Item>

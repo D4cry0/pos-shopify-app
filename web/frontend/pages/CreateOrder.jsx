@@ -1,4 +1,4 @@
-import { Button,
+import { Badge, Button,
          ButtonGroup,
          Card,
          Form,
@@ -16,7 +16,7 @@ import { CheckoutMajor,
 
 import { useEffect, useState } from 'react';
 
-import { BothPaymentFields, ProductList, ScannerPicker, PINField } from '../components';
+import { BothPaymentFields, ProductList, ScannerPicker, UIDField } from '../components';
 
 import { useCreateOrder } from '../hooks';
 
@@ -25,6 +25,7 @@ import '../styles.css';
 export default function CreateOrder() {
 
     const { 
+            retailLocation,
             cashVal,
             creditVal,
             setCashValue,
@@ -39,12 +40,12 @@ export default function CreateOrder() {
             vatCart,
             totalCart,
             addProduct,
-            updateProduct,
             deleteProduct,
             resetForm,
-            handleStaffPin,
-            handleStaffPinError,
-            staffPinError,
+            staffUid,
+            handleStaffUid,
+            handleStaffUidError,
+            staffUidError,
             handleCustomerEmail,
             handleCustomerEmailError,
             customerEmail,
@@ -57,6 +58,7 @@ export default function CreateOrder() {
     const [ isCash, setIsCash ] = useState( false );
     const [ isCredit, setIsCredit ] = useState( false );
     const [ isBoth, setIsBoth ] = useState( false );
+    const [ isLocation, setIsLocation] = useState( false );
 
     const currencyFormat = new Intl.NumberFormat('en-US', {
         style: 'currency',
@@ -79,25 +81,32 @@ export default function CreateOrder() {
 
     useEffect(() => {
 
-        setIsCash( cashVal == subTotalCart && subTotalCart > 0 );
-        setIsCredit( creditVal ==  subTotalCart && subTotalCart > 0 );
+        setIsCash( cashVal == totalCart && totalCart > 0 );
+        setIsCredit( creditVal ==  totalCart && totalCart > 0 );
         setIsBoth( creditVal > 0 && cashVal > 0 );
 
     }, [cashVal, creditVal]);
+
+    useEffect(() => {
+
+        setIsLocation( staffUid.length > 5 && retailLocation.length > 1 );
+
+    }, [ staffUid, retailLocation ])
+    
     
     return (
 
         <Page 
-            title="New Order"
+            title='New Order'
         >
             <Layout>
 
                 <Layout.Section>
-                    <Card sectioned title="Cart">
+                    <Card sectioned title='Cart'>
                         <Card.Section>
                             <Stack alignment='center'>
                                 <Stack.Item fill >
-                                    <ScannerPicker addProduct={ addProduct } />
+                                    <ScannerPicker addProduct={ addProduct } disabled={ !isLocation } />
                                 </Stack.Item>
                                 <Stack.Item>
                                     {
@@ -116,7 +125,6 @@ export default function CreateOrder() {
                             {
                                 showCartList && <ProductList 
                                     cartList={ cartList } 
-                                    updateProduct={ updateProduct }
                                     deleteProduct={ deleteProduct }
                                     cartItemCount={ cartItemCount }
                                 />
@@ -127,49 +135,48 @@ export default function CreateOrder() {
 
                 <Layout.Section secondary>
 
-                    <Card sectioned title="Customer">
-                        <TextField
-                            label='Email'
-                            autoComplete='off'
-                            value={ customerEmail }
-                            onChange={ handleCustomerEmail }
-                            error={ handleCustomerEmailError }
-                        />
+                    <Card sectioned title='Location'>
+                        <Stack vertical>
+                            <Stack.Item>
+                                <UIDField 
+                                    staffUid = { staffUid }
+                                    onStaffUidChange={ handleStaffUid }
+                                    onError={ handleStaffUidError }
+                                    error={ staffUidError }
+                                    disabled={ isLocation }
+                                />
+                            </Stack.Item>
+                            <Stack.Item>
+                                {
+                                    staffUid.length < 6 
+                                        && <Badge status='info'>{ 'Location Off' }</Badge>
+                                }
+                                {
+                                    staffUid.length == 6 && retailLocation.length < 1
+                                        && <Badge status='attention'>{ 'Loading ...' }</Badge>
+                                }
+                                {
+                                    staffUid.length > 5 && retailLocation.length > 1 
+                                        && <Badge status='success'>{ retailLocation }</Badge>
+                                }
+                            </Stack.Item>
+                        </Stack>
                     </Card>
 
-                    <Card sectioned title="Order Summary">
+                    <Card sectioned title={`Total: ${ currencyFormat.format( totalCart ) }`}>
                         <Card.Section>
-                            <Stack distribution='fillEvenly'>
-                                <Stack.Item>
-                                    
-                                    <TextContainer>
-                                    <p>Subtotal:</p>
-                                    <p>VAT:</p>
-                                    <p>Total:</p>
-                                    </TextContainer>
-                                    
-                                </Stack.Item>
-                                <Stack.Item>
-
-                                    <TextContainer>
-                                        <p>{ currencyFormat.format( subTotalCart ) }</p>
-                                        <p>{ currencyFormat.format( vatCart ) }</p>
-                                        <p>{ currencyFormat.format( totalCart ) }</p>
-                                    </TextContainer>
-                                    
-                                </Stack.Item>
-                            </Stack>
-
+                            <TextField
+                                label='Customer email'
+                                autoComplete='off'
+                                value={ customerEmail }
+                                onChange={ handleCustomerEmail }
+                                error={ handleCustomerEmailError }
+                            />
                         </Card.Section>
-                            
                         {
                             cartItemCount > 0 && 
                             <Card.Section>
-                                <PINField 
-                                    onChange={ handleStaffPin }
-                                    onError={ handleStaffPinError }
-                                    error={ staffPinError }
-                                />
+                                
                         
                                 <div style={{height: 30}}></div>
                                 
@@ -211,7 +218,7 @@ export default function CreateOrder() {
                                         credit={ creditVal }
                                         setCashValue={ setCashValue }
                                         setCreditValue={ setCreditValue }
-                                        orderTotal={ subTotalCart }
+                                        orderTotal={ totalCart }
                                     />
                                 }
                             </Card.Section>
@@ -226,7 +233,7 @@ export default function CreateOrder() {
                                         ?   <Button submit primary icon={CheckoutMajor}>
                                                 Checkout
                                             </Button> 
-                                        :   <Spinner accessibilityLabel="Spinner Submit" size="large" />
+                                        :   <Spinner accessibilityLabel='Spinner Submit' size='large' />
                                     }
                                     <div style={{height: 20}}></div>
                                     {

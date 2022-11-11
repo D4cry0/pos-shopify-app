@@ -1,20 +1,23 @@
 // @ts-check
-import { join } from "path";
-import { readFileSync } from "fs";
-import express from "express";
-import cookieParser from "cookie-parser";
-import { Shopify, LATEST_API_VERSION } from "@shopify/shopify-api";
+import { join } from 'path';
+import { readFileSync } from 'fs';
+import express from 'express';
+import cookieParser from 'cookie-parser';
+import { Shopify, LATEST_API_VERSION } from '@shopify/shopify-api';
 import dotenv from 'dotenv';
 
 
-import applyAuthMiddleware from "./middleware/auth.js";
-import verifyRequest from "./middleware/verify-request.js";
-import { setupGDPRWebHooks } from "./gdpr.js";
-import redirectToAuth from "./helpers/redirect-to-auth.js";
-import createDraftOrder from "./helpers/create-new-order.js";
-import { BillingInterval } from "./helpers/ensure-billing.js";
-import { AppInstallations } from "./app_installations.js";
+import applyAuthMiddleware from './middleware/auth.js';
+import verifyRequest from './middleware/verify-request.js';
+import posOrderApiEndpoints from './middleware/pos-order-api.js';
+import posStaffApiEndpoints from './middleware/staff-api.js';
+import posInventoryApiEndpoints from './middleware/inventory-api.js';
+import { setupGDPRWebHooks } from './gdpr.js';
+import redirectToAuth from './helpers/redirect-to-auth.js';
+import { BillingInterval } from './helpers/ensure-billing.js';
+import { AppInstallations } from './app_installations.js';
 import { dbConnection } from './db/config.js';
+
 
 dotenv.config();
 
@@ -80,6 +83,7 @@ export async function createServer(
 ) {
   const app = express();
 
+  // Start Database MongoDB
   dbConnection();
 
   app.set("use-online-tokens", USE_ONLINE_TOKENS);
@@ -114,29 +118,13 @@ export async function createServer(
   );
 
   // All endpoints after this point will have access to a request.body
-
-  
   // attribute, as a result of the express.json() middleware
   app.use(express.json());
 
-  app.post("/api/posorder/create", async (req = express.request, res) => {
-    const session = await Shopify.Utils.loadCurrentSession(
-      req,
-      res,
-      false
-    );
-    let status = 200;
-    let error = null;
-
-    try {
-      await createDraftOrder(session, req.body);
-    } catch ( err ) {
-      console.log(`Failed to create order: ${err.message}`);
-      status = 500;
-      error = err.message;
-    }
-    res.status(status).send({ success: status === 200, error });
-  });
+  // POS API Endpoints
+  posStaffApiEndpoints( app );
+  posOrderApiEndpoints( app );
+  posInventoryApiEndpoints( app );
 
   app.use((req, res, next) => {
     const shop = Shopify.Utils.sanitizeShop(req.query.shop);

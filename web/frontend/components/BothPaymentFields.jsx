@@ -1,9 +1,10 @@
-import { TextField } from '@shopify/polaris'
-
-import { useEffect, useState } from 'react'
-
+import { TextField } from '@shopify/polaris';
 
 export const BothPaymentFields = ({ cash, setCashValue, credit, setCreditValue, orderTotal }) => {
+
+    const handleFocus = ( event ) => {
+        event.currentTarget.select();
+    }
 
     const handleCashChange = ( value ) => {
 
@@ -57,12 +58,14 @@ export const BothPaymentFields = ({ cash, setCashValue, credit, setCreditValue, 
                 label='Cash'
                 value={ cash }
                 onChange={ handleCashChange }
+                onFocus={ handleFocus }
                 autoComplete='off'
             />
             <TextField 
                 label='Credit'
                 value={ credit }
                 onChange={ handleCreditChange }
+                onFocus={ handleFocus }
                 autoComplete='off'
             /> 
         </>

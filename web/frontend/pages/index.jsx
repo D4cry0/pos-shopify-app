@@ -1,5 +1,3 @@
-import { useState } from 'react';
-
 import {
   Page,
   EmptyState,
@@ -9,6 +7,8 @@ import {
 } from '@shopify/polaris';
 import { useNavigate, useAppBridge } from '@shopify/app-bridge-react';
 import { Fullscreen } from '@shopify/app-bridge/actions';
+
+import { useState } from 'react';
 
 import { posImg } from '../assets';
 
@@ -45,33 +45,33 @@ export default function HomePage() {
           }}
         >
           <div style={{ marginLeft: '1rem', flexGrow: 1 }}>
-            <DisplayText size="small"> vsys POS - point of sale </DisplayText>
+            <DisplayText size='small'> vsys POS - point of sale </DisplayText>
           </div>
         </div>
       </FullscreenBar> }
       <Page 
           narrowWidth
-          title="Welcome"
+          title='Welcome'
           primaryAction={{
-            content: "Fullscreen",
+            content: 'Fullscreen',
             onAction: () => goFullscreen(),
             disabled: ( isFullscreen )
           }}
       >
         <Card sectioned>
           <EmptyState
-            heading="POS"
+            heading='POS'
             action={{
               content: 'New Order',
-              onAction: () => navigate("/CreateOrder"),
+              onAction: () => navigate('/CreateOrder'),
             }}
             secondaryAction={{
               content: 'Sales',
-              onAction: () => navigate("/"),
+              onAction: () => navigate('/'),
             }}
             image={ posImg }
           >
-            <p>Staff PIN is required</p>
+            <p>Staff UID is required</p>
           </EmptyState>
         </Card>
       </Page>

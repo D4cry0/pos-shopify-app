@@ -1,20 +1,20 @@
-import { ResourcePicker } from "@shopify/app-bridge-react";
+import { ResourcePicker } from '@shopify/app-bridge-react';
 import { InlineError,
-         TextField,
-        } from "@shopify/polaris";
+         TextField, } from '@shopify/polaris';
 
-import { useCallback, useState, useEffect, useRef } from "react";
+import { useCallback, useState, useEffect, useRef } from 'react';
 
 import '../styles.css';
 
-export const ScannerPicker = ({ addProduct }) => {
-    const [searchValue, setSearchValue] = useState( '' );
+export const ScannerPicker = ({ addProduct, disabled }) => {
+    const [ searchValue, setSearchValue ] = useState( '' );
 
-    const [selectedProduct, setSelectedProduct] = useState( null );
+    const [ selectedProduct, setSelectedProduct ] = useState( null );
 
-    const [showResourcePicker, setShowResourcePicker] = useState( false );
-    const [showInError, setShowInError] = useState( false );
-    const [msgInError, setInError] = useState( '' );
+    const [ showResourcePicker, setShowResourcePicker ] = useState( false );
+    const [ showInError, setShowInError ] = useState( false );
+    const [ msgInError, setInError ] = useState( '' );
+    const [ discountAmount, setDiscountAmount ] = useState( 0 );
 
     const textFieldRef = useRef();
 
@@ -45,9 +45,22 @@ export const ScannerPicker = ({ addProduct }) => {
             }, 400 );
         }
 
+        // Key: Enter
         if ( event.keyCode === 13 ) {
-            handleShowResourcePicker( true );
+            const buff = searchValue.split("'");
+
+            if ( buff.length > 1 ){
+                setSearchValue(buff[0]);
+
+                // We split the barcode to apply individual discounts for damage articles
+                // TODO: we need to useContext for this rule
+                buff[1].slice(0, 3) === 'DMG' 
+                    && setDiscountAmount( 
+                        (parseFloat( buff[1].slice(3) ) / 100).toFixed(2)
+                    );
+            }
             clearTimeout( keyTimer );
+            handleShowResourcePicker( true );
         }
         
         if ( event.keyCode === 17 ){
@@ -60,7 +73,7 @@ export const ScannerPicker = ({ addProduct }) => {
     const handlePaste = ( event ) => {
         event.preventDefault();
         handleSearchChange( '' );
-        event.currentTarget.value='';
+        event.currentTarget.value = '';
     } 
 
     const handleFocus = ( event ) => {
@@ -68,19 +81,22 @@ export const ScannerPicker = ({ addProduct }) => {
     }
 
     const handleProductSelect = ({ selection }) => {
+
+
+        // id: selection[0].id,
         setSelectedProduct({
-            id:             selection[0].id,
             image:          {
                                 originalSrc: selection[0].images[0]?.originalSrc || '', 
                                 altText: selection[0].images[0]?.altText || ''
                             },
             title:          selection[0].title,
             variantId:      selection[0].variants[0].id,
-            inventoryItem:  selection[0].variants[0].product.id,
             inventoryQty:   selection[0].variants[0].inventoryQuantity,
             qtyToBuy:       1,
             price:          selection[0].variants[0].price,
             sku:            selection[0].variants[0].sku,
+            amountDiscount: discountAmount * parseFloat(selection[0].variants[0].price),
+            inventoryItemId: selection[0].variants[0].inventoryItem.id,
         });
         
     };
@@ -95,8 +111,13 @@ export const ScannerPicker = ({ addProduct }) => {
             // TODO: Logica para validar la info
 
             if ( searchValue.toUpperCase().normalize() === selectedProduct.sku.normalize() ){
-                addProduct( selectedProduct );
+                const err = addProduct( selectedProduct );
                 
+                if( err ) {
+                    setInError( 'Insufficient inventory' );
+                    toggleInError( true );
+                }
+
             } else {
                 setInError( 'Invalid item' );
                 toggleInError( true );
@@ -124,12 +145,12 @@ export const ScannerPicker = ({ addProduct }) => {
 
         clearTimeout( keyTimer );
     
-    }, [showResourcePicker]);
+    }, [ showResourcePicker ]);
     
     return (
         <>
             <ResourcePicker
-                resourceType="Product"
+                resourceType='Product'
                 showVariants={false}
                 selectMultiple={false}
                 onCancel={ () => handleShowResourcePicker( false ) }
@@ -138,19 +159,27 @@ export const ScannerPicker = ({ addProduct }) => {
                 open={ showResourcePicker }
                 showArchived={false}
             />
-            <div ref={ textFieldRef } onKeyDown={ handleKeyDown } onPaste={ handlePaste } onDrop={ handlePaste }>
+            <div 
+                ref={ textFieldRef } 
+                onKeyDown={ handleKeyDown } 
+                onPaste={ handlePaste } 
+                onDrop={ handlePaste }
+            >
                 <TextField
-                    label="Search Items"
+                    label='Search Items'
                     value={ searchValue }
                     onChange={ handleSearchChange }
-                    placeholder="Search by SKU ..."
-                    helpText="Barcode Scanner"
-                    autoComplete="off"
+                    placeholder='Search by SKU ...'
+                    helpText='Barcode Scanner'
+                    autoComplete='off'
                     onFocus={ handleFocus }
                     focused='true'
+                    disabled={ disabled }
                 />
             </div>
-            { showInError && <InlineError message={ msgInError } />}
+            { 
+                showInError && <InlineError message={ msgInError } />
+            }
         </>
     );
 }

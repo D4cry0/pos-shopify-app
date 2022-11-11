@@ -1,4 +1,4 @@
-import { Shopify } from "@shopify/shopify-api";
+import { Shopify } from '@shopify/shopify-api';
 
 
 import { CREATE_DRAFT_ORDER_QUERY,
@@ -9,7 +9,7 @@ import { CREATE_DRAFT_ORDER_QUERY,
 
 /* 
     {
-      pin: '123456',
+      uid: '123456',
       cash: '100',
       credit: '100',
       customerEmail: '',
@@ -26,13 +26,13 @@ import { CREATE_DRAFT_ORDER_QUERY,
     }
 */
 
-export default async function createDraftOrder( session, orderData ) {
+const createOrder = async ( session, orderData ) => {
     // TODO: Establish location by admin input
-    const location = "RetailGDL-P738";
+    const location = 'RetailGDL-P738';
 
     const client = new Shopify.Clients.Graphql(session.shop, session.accessToken);
     
-    const { pin, cash, credit, customerEmail, lineItems } = orderData;
+    const { staff, cash, credit, customerEmail, lineItems } = orderData;
 
     let draftOrderId;
     let orderId;
@@ -41,15 +41,24 @@ export default async function createDraftOrder( session, orderData ) {
     let moveFulfillOrder;
     let createdFulFillmentOrder;
 
+    // TODO: Apply discounts based on payment type
+
+    const calculatedLineItems = lineItems.map( item => {
+        return {
+            variantId: item.variantId,
+            quantity: item.quantity
+        };
+    });
+
     try {
         // Create a new Draft Order
         draftOrderId = await client.query(
-            CREATE_DRAFT_ORDER_QUERY( pin, cash, credit, customerEmail, lineItems, location )
+            CREATE_DRAFT_ORDER_QUERY( staff, cash, credit, customerEmail, calculatedLineItems, location )
         );
 
     } catch ( err ) {
         throw new Error( JSON.stringify({
-                line: 'create draft order',
+                line: 'err 1101',
                 msg: err.message,
                 response: err.response
             }, null, 2) );
@@ -63,7 +72,7 @@ export default async function createDraftOrder( session, orderData ) {
 
     } catch ( err ) {
         throw new Error( JSON.stringify({
-                line: 'create order',
+                line: 'err 1201',
                 msg: err.message,
                 response: err.response
             }, null, 2) );
@@ -81,12 +90,12 @@ export default async function createDraftOrder( session, orderData ) {
         locationID = fulfillOrder.body.data.order.fulfillmentOrders.edges[0].node.locationsForMove.edges.find( ( node ) => 
             node.node.location.name.normalize() === location.normalize() && node.node.movable 
         );
-
+        
         if( ! locationID ) throw new Error( ' Field: Designed Location ID not valid ID or not movable' );
     
     } catch ( err ) {
         throw new Error( JSON.stringify({
-                line: 'get the fulfill order and movable',
+                line: 'err 1301',
                 msg: err.message,
             }, null, 2) );
     }
@@ -103,7 +112,7 @@ export default async function createDraftOrder( session, orderData ) {
 
     } catch ( err ) {
         throw new Error( JSON.stringify({
-                line: 'set fulfill order in location',
+                line: 'err 1401',
                 msg: err.message,
                 response: err.response
             }, null, 2) );
@@ -117,7 +126,7 @@ export default async function createDraftOrder( session, orderData ) {
 
     } catch ( err ) {
         throw new Error( JSON.stringify({
-                line: 'fulfill order',
+                line: 'err 1501',
                 msg: err.message,
                 response: err.response
             }, null, 2) );
@@ -126,4 +135,9 @@ export default async function createDraftOrder( session, orderData ) {
 
     // TODO: If is needed a return value
     return '';
+}
+
+
+export {
+    createOrder,
 }
