@@ -1,4 +1,4 @@
-const CREATE_DRAFT_ORDER_QUERY = ( staff, cash, credit, customerEmail, lineItems, location ) => {
+const CREATE_DRAFT_ORDER_QUERY = ( staff, cash, credit, customerEmail, lineItems, location, orderDiscount ) => {
     /* 
         // RETURN DATA
         body{
@@ -25,16 +25,20 @@ const CREATE_DRAFT_ORDER_QUERY = ( staff, cash, credit, customerEmail, lineItems
             }`,
             variables: {
                 input: {
+                    appliedDiscount: {
+                        value: orderDiscount,
+                        valueType: 'FIXED_AMOUNT',
+                    },
                     email: customerEmail,
                     lineItems: lineItems,
                     customAttributes: [
                         {
                             key: 'cash',
-                            value: cash
+                            value: credit === '0' ? "100%" : cash
                         },
                         {
                             key: 'credit',
-                            value: credit
+                            value: cash === '0' ? "100%" : credit
                         },
                         {
                             key: 'staff',

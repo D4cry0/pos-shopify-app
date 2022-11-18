@@ -9,26 +9,30 @@ export const BothPaymentFields = ({ cash, setCashValue, credit, setCreditValue, 
     const handleCashChange = ( value ) => {
 
         const valueFloat = parseFloat(value);
-
-        if( valueFloat > orderTotal ){
-            setCashValue( orderTotal - 1 );
-            setCreditValue( '1' );
+        const roundUpAdjust = ( orderTotal - orderTotal.toFixed() ) < 0 ? -0.5 : 0;
+        const decimals = parseFloat( ( orderTotal - ( orderTotal + roundUpAdjust ).toFixed() ).toFixed(2) );
+        
+        if( valueFloat >= orderTotal - decimals ){
+            setCashValue( ( orderTotal + roundUpAdjust - 1 ).toFixed() );
+            setCreditValue( 1 + decimals );
             return;
         }
-
+        
         if( valueFloat < 0 || !value || !valueFloat ){
             setCashValue( '1' );
-            setCreditValue( orderTotal-1 );
+            setCreditValue( orderTotal - 1 );
             return;
         }
-
+        
         setCashValue( valueFloat );
-        setCreditValue( (orderTotal - valueFloat).toString() );
+        setCreditValue( (orderTotal - valueFloat).toFixed(2) );
     }
-
+    
     const handleCreditChange = ( value ) => {
-
+        
         const valueFloat = parseFloat(value);
+        const roundUpAdjust = ( orderTotal - orderTotal.toFixed() ) < 0 ? -0.5 : 0;
+        const decimals = parseFloat( ( orderTotal - ( orderTotal + roundUpAdjust ).toFixed() ).toFixed(2) );
 
         if( valueFloat > orderTotal ){
             setCreditValue( orderTotal-1 );
@@ -37,20 +41,15 @@ export const BothPaymentFields = ({ cash, setCashValue, credit, setCreditValue, 
         }
 
         if( valueFloat < 0 || !value || !valueFloat ){
-            setCreditValue( '1' );
-            setCashValue( orderTotal-1 );
+            setCreditValue( 1 + decimals );
+            setCashValue( orderTotal - 1 - decimals );
             return;
         }
 
         setCreditValue( valueFloat );
-        setCashValue( orderTotal - valueFloat );
-    }
+        setCashValue( (orderTotal - valueFloat - decimals) );
 
-    // useEffect(() => {
-    //     setCashField( cash );
-    //     setCreditField( credit );
-    // }, [isBothPayments]);
-    
+    }
 
     return (
         <>
@@ -64,8 +63,6 @@ export const BothPaymentFields = ({ cash, setCashValue, credit, setCreditValue, 
             <TextField 
                 label='Credit'
                 value={ credit }
-                onChange={ handleCreditChange }
-                onFocus={ handleFocus }
                 autoComplete='off'
             /> 
         </>

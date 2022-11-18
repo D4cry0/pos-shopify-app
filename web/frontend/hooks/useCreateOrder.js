@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useField,
          useForm,
@@ -23,6 +23,7 @@ export const useCreateOrder = () => {
         sku,
         amountDiscount,
         inventoryItemId,
+        tags,
     }) => {
 
         return [
@@ -39,6 +40,7 @@ export const useCreateOrder = () => {
                 sku: sku || '',
                 amountDiscount: amountDiscount || 0,
                 inventoryItemId: inventoryItemId || '',
+                tags: tags || [],
             }
         ]
     }
@@ -87,6 +89,8 @@ export const useCreateOrder = () => {
                 variantId: item.variantId,
                 quantity: item.qtyToBuy,
                 amountDiscount: item.amountDiscount,
+                price: item.price,
+                tags: item.tags,
             };
         });
 
@@ -158,7 +162,7 @@ export const useCreateOrder = () => {
     }
     
     const onCash = () => {
-        cash.onChange( orderTotal.toString() );
+        cash.onChange( '1' );
         credit.onChange( '0' );
     }
     
@@ -168,12 +172,12 @@ export const useCreateOrder = () => {
 
     const onCredit = () => {
         cash.onChange( '0' );
-        credit.onChange( orderTotal.toString() );
+        credit.onChange( '1' );
     }
 
     const onBoth = () => {
-        cash.onChange( (orderTotal-1).toString() );
-        credit.onChange( '1' );
+        cash.onChange( '1' );
+        credit.onChange( (orderTotal-1).toString() );
     }
     
     const addProduct = async ( newProduct ) => {
@@ -251,26 +255,43 @@ export const useCreateOrder = () => {
         reset();
         setUpdating( true );
     }
-    
-    useEffect(() => {
+
+    useMemo(() => {
         let amount = 0;
         let itemSum = 0;
         
         cartList.fields.forEach( item => {
+            let discItem = parseFloat(item.qtyToBuy.value) * ( parseFloat(item.price.value) - item.amountDiscount.value );
+            // TODO: Get the discount code from fetch in DB
+            item.tags.value.forEach( tag => {
+                if( tag === 'PUNTOS' ){
+                    discItem *= 0.80;
+                }
+            });
             
+
             itemSum += item.qtyToBuy.value;
-            amount += parseFloat(item.qtyToBuy.value) * ( parseFloat(item.price.value) - item.amountDiscount.value );
+            amount += discItem;
             
         });
 
         if(cartList.fields.length < 1) reset();
         
         setCartItemCount( itemSum );
+
         setOrderTotal( amount );
-        
+
         setUpdating( false );
-        
+
     }, [ updating ]);
+    
+    // useEffect(() => {
+        
+    //     calcData;
+        
+    //     setUpdating( false );
+        
+    // }, [ updating ]);
     
     useEffect(() => {
         

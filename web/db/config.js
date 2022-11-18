@@ -1,5 +1,7 @@
 import mongoose from "mongoose";
 
+let countTimeOut = 1;
+
 const dbConnection = async() => {
 
     try {
@@ -10,8 +12,14 @@ const dbConnection = async() => {
         
 
     } catch ( err ) {
-        console.log( err );
-        throw new Error('Error al inicializar la DB');
+        
+        console.log('Error in DB connection', err );
+        if( countTimeOut < 10){
+            setTimeout( dbConnection, countTimeOut*1000);
+        } else {
+            console.log('Time exceded, restart server or try manual');
+        }
+        countTimeOut *= 2;
     }
 
 }

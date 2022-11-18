@@ -81,8 +81,8 @@ export default function CreateOrder() {
 
     useEffect(() => {
 
-        setIsCash( cashVal == totalCart && totalCart > 0 );
-        setIsCredit( creditVal ==  totalCart && totalCart > 0 );
+        setIsCash( creditVal === '0' && totalCart > 0 );
+        setIsCredit( cashVal === '0' && totalCart > 0 );
         setIsBoth( creditVal > 0 && cashVal > 0 );
 
     }, [cashVal, creditVal]);

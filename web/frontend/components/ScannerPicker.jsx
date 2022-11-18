@@ -59,23 +59,23 @@ export const ScannerPicker = ({ addProduct, disabled }) => {
                         (parseFloat( buff[1].slice(3) ) / 100).toFixed(2)
                     );
             } else {
-                setDiscountAmount( 0 );
+                setDiscountAmount( '0' );
             }
             clearTimeout( keyTimer );
             handleShowResourcePicker( true );
         }
         
-        if ( event.keyCode === 17 ){
-            keyTimer = setTimeout(() => {
-                handleSearchChange( '' );
-            }, 200 );
-        }
+        // if ( event.keyCode === 17 ){
+        //     keyTimer = setTimeout(() => {
+        //         handleSearchChange( '' );
+        //     }, 200 );
+        // }
     }
 
     const handlePaste = ( event ) => {
-        event.preventDefault();
-        handleSearchChange( '' );
-        event.currentTarget.value = '';
+        // event.preventDefault();
+        // handleSearchChange( '' );
+        // event.currentTarget.value = '';
     } 
 
     const handleFocus = ( event ) => {
@@ -84,21 +84,23 @@ export const ScannerPicker = ({ addProduct, disabled }) => {
 
     const handleProductSelect = ({ selection }) => {
 
+        console.log( selection );
 
         // id: selection[0].id,
         setSelectedProduct({
-            image:          {
-                                originalSrc: selection[0].images[0]?.originalSrc || '', 
-                                altText: selection[0].images[0]?.altText || ''
-                            },
-            title:          selection[0].title,
-            variantId:      selection[0].variants[0].id,
-            inventoryQty:   selection[0].variants[0].inventoryQuantity,
-            qtyToBuy:       1,
-            price:          selection[0].variants[0].price,
-            sku:            selection[0].variants[0].sku,
-            amountDiscount: discountAmount * parseFloat(selection[0].variants[0].price),
+            image:           {
+                                 originalSrc: selection[0].images[0]?.originalSrc || '', 
+                                 altText: selection[0].images[0]?.altText || ''
+                             },
+            title:           selection[0].title,
+            variantId:       selection[0].variants[0].id,
+            inventoryQty:    selection[0].variants[0].inventoryQuantity,
+            qtyToBuy:        1,
+            price:           selection[0].variants[0].price,
+            sku:             selection[0].variants[0].sku,
+            amountDiscount:  discountAmount * parseFloat(selection[0].variants[0].price),
             inventoryItemId: selection[0].variants[0].inventoryItem.id,
+            tags:            selection[0].tags,
         });
     };
     
@@ -133,9 +135,13 @@ export const ScannerPicker = ({ addProduct, disabled }) => {
     }, [ selectedProduct ]);
 
     useEffect(() => {
-        const timer = setTimeout(() => {
-            showInError && toggleInError( false );
-        }, 3000 );
+        let timer;
+
+        if( showInError ){
+            timer = setTimeout(() => {
+                 toggleInError( false );
+            }, 3000 );
+        }
         
         return () => {
             clearTimeout( timer );

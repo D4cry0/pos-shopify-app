@@ -29,6 +29,7 @@ import { CREATE_DRAFT_ORDER_QUERY,
 const createOrder = async ( session, orderData ) => {
     // TODO: Establish location by admin input
     const location = 'RetailGDL-P738';
+    const discPuntos = 0.20;
 
     const client = new Shopify.Clients.Graphql(session.shop, session.accessToken);
     
@@ -43,12 +44,20 @@ const createOrder = async ( session, orderData ) => {
 
     // TODO: Apply discounts based on payment type
 
+    let orderDiscount = 0;
     const calculatedLineItems = lineItems.map( item => {
+        item.tags.forEach( tag => {
+            if( tag === 'PUNTOS' ) {
+                orderDiscount += discPuntos * item.quantity 
+                            * ( item.price - parseFloat( item.amountDiscount.toFixed( credit > 0 ? 2 : 0 ) ) );
+            }
+        });
+
         return {
             appliedDiscount: 
             item.amountDiscount > 0 
                 ? {
-                    value: item.amountDiscount,
+                    value: parseFloat( item.amountDiscount.toFixed( credit > 0 ? 2 : 0 ) ),
                     valueType: 'FIXED_AMOUNT',
                   } 
                 : null,
@@ -60,7 +69,14 @@ const createOrder = async ( session, orderData ) => {
     try {
         // Create a new Draft Order
         draftOrderId = await client.query(
-            CREATE_DRAFT_ORDER_QUERY( staff, cash, credit, customerEmail, calculatedLineItems, location )
+            CREATE_DRAFT_ORDER_QUERY( staff, 
+                    cash, 
+                    credit, 
+                    customerEmail, 
+                    calculatedLineItems, 
+                    location,
+                    parseFloat( orderDiscount.toFixed( credit > 0 ? 2 : 0) )
+            )
         );
 
     } catch ( err ) {
